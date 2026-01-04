@@ -1,0 +1,34 @@
+baseURL = "https://example.com/"
+languageCode = "en-us"
+title = "Klemen Kobau - Developer Blog"
+theme = "PaperMod"
+
+[params]
+  author = "Klemen Kobau"
+  defaultTheme = "dark"
+  disableThemeToggle = false
+  ShowReadingTime = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowToc = true
+
+[params.homeInfoParams]
+  Title = "Klemen Kobau"
+  Content = "Developer blog showcasing programming projects"
+
+[[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/KlemenKobau"
+
+[[menu.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  weight = 10
+
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 20
