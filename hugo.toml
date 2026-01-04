@@ -12,6 +12,7 @@ theme = "PaperMod"
   ShowBreadCrumbs = true
   ShowCodeCopyButtons = true
   ShowToc = true
+  ShowRssButtonInSectionTermList = true
 
 [params.homeInfoParams]
   Title = "Klemen Kobau"
