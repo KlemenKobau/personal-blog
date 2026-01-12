@@ -22,6 +22,18 @@ theme = "PaperMod"
   name = "github"
   url = "https://github.com/KlemenKobau"
 
+[[params.socialIcons]]
+  name = "linkedin"
+  url = "https://www.linkedin.com/in/klemen-kobau/"
+
+[[params.socialIcons]]
+  name = "email"
+  url = "mailto:klemen.kobau@gmail.com"
+
+[[params.socialIcons]]
+  name = "gitlab"
+  url = "https://gitlab.com/KlemenKobau"
+
 [[menu.main]]
   identifier = "posts"
   name = "Posts"
