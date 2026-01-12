@@ -19,6 +19,10 @@ theme = "PaperMod"
   Content = "Developer blog showcasing programming projects"
 
 [[params.socialIcons]]
+  name = "cv"
+  url = "https://klemenkobau.gitlab.io/cv/klemen-kobau.pdf"
+
+[[params.socialIcons]]
   name = "github"
   url = "https://github.com/KlemenKobau"
 
