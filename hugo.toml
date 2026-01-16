@@ -10,6 +10,7 @@ buildExpired = false
 pygmentsUseClasses = true
 
 [params]
+  env = "production"
   author = "Klemen Kobau"
   defaultTheme = "dark"
   disableThemeToggle = false
