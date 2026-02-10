@@ -1,7 +1,7 @@
 ---
-title: "Lights Out"
+title: "Solving the Lights Out problem"
 date: 2023-07-24T17:53:32+02:00
-tags: ['algorithm', 'math']
+tags: ['algorithm', 'math', 'quarkus', 'java', 'angular']
 draft: false
 math: true
 ---
@@ -69,7 +69,6 @@ The problem has the following properties:
 I made it obvious with the previous diagrams, but we can represent a light with a boolean,
 1 means turned on and 0 means turned off.
 
-Let's look at what clicking the top left button does.
 We will now use a more mathematical notation to better represent the problem.
 
 Out example:
@@ -87,4 +86,32 @@ x_{21} & x_{22}
 \end{matrix}
 $$
 
-Where $x_{ij}$ represents the state of the light in the *i*-th row and *j*-th column.
+We will define the following:
+- $x_{ij}$ represents the state of the light in the *i*-th row and *j*-th column
+- $c_{ij}$ represents whether we will click the button in the i*-th row and *j*-th column
+- $y_{ij}$ shows the final state in the *i*-th row and *j*-th column
+
+Let's look at what determines whether the light is on or off in the top left corner.
+Mod 2 just means that we are working in binary.
+
+$$
+y_{11} = x_{11} + c_{11} + c_{12} + c_{21} \space mod \space 2
+$$
+
+Intuitively, this makes sense. The new state depends on the starting state
+and whether the neighboring buttons were clicked or not.
+We can do this for all fields.
+
+$$
+y_{11} = x_{11} + c_{11} + c_{12} + c_{21} \space mod \space 2 \\\
+y_{12} = x_{12} + c_{11} + c_{12} + c_{22} \space mod \space 2 \\\
+y_{21} = x_{21} + c_{11} + c_{21} + c_{22} \space mod \space 2 \\\
+y_{22} = x_{22} + c_{12} + c_{21} + c_{22} \space mod \space 2
+$$
+
+We now have a system of equations! What is even nicer is that that the relationship is 
+composed only of simple addition!
+If you know a bit of maths you probably know that these systems can be solved by substituting
+and eliminating the variables, but our solution happens to
+have a very nice matrix representation.
+You can read more about this in [Wikipedia: System of linear equations](https://en.wikipedia.org/wiki/System_of_linear_equations).
