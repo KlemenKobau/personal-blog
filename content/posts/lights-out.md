@@ -80,10 +80,10 @@ Out example:
 Becomes:
 
 $$
-\begin{matrix}
+\begin{bmatrix}
 x_{11} & x_{12} \\\
 x_{21} & x_{22}
-\end{matrix}
+\end{bmatrix}
 $$
 
 We will define the following:
@@ -115,3 +115,24 @@ If you know a bit of maths you probably know that these systems can be solved by
 and eliminating the variables, but our solution happens to
 have a very nice matrix representation.
 You can read more about this in [Wikipedia: System of linear equations](https://en.wikipedia.org/wiki/System_of_linear_equations).
+
+$$
+\begin{bmatrix}
+    y_{11} \\\
+    y_{12} \\\
+    y_{21} \\\
+    y_{22}
+\end{bmatrix} =
+\begin{bmatrix}
+    x_{11} \\\
+    x_{12} \\\
+    x_{21} \\\
+    x_{22}
+\end{bmatrix} +
+\begin{bmatrix}
+    c_{11} & c_{12} & c_{21} & 0 \\\
+    c_{11} & c_{12} & 0 & c_{22} \\\
+    c_{11} & 0 & c_{21} & c_{22} \\\
+    0 & c_{12} & c_{21} & c_{22}
+\end{bmatrix}
+$$
