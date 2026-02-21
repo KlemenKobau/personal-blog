@@ -2,7 +2,7 @@
 title: "Solving the Lights Out problem"
 date: 2023-07-24T17:53:32+02:00
 tags: ['algorithm', 'math', 'quarkus', 'java', 'angular']
-draft: false
+draft: true
 math: true
 ---
 
