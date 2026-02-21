@@ -42,15 +42,6 @@ spec:
 status: {}
 ```
 
-## Explain command
-
-```sh
-kubectl explain <what>
-kubectl explain replicaset
-```
-
-Describes fields in some kubernetes object.
-
 ## Update the pod definition
 
 Apply the changes (apply the diff)
@@ -67,4 +58,18 @@ If you are changing a field that cannot be updated (for example the nodeName pod
 you can also use (delete and create the resources)
 ```sh
 kubectl replace --force -f <file name>
+```
+
+## Explain command
+
+```sh
+kubectl explain <what>
+kubectl explain replicaset
+```
+
+Describes fields in some kubernetes object.
+
+## Watch for changes
+```sh
+kubectl get pods --watch
 ```
