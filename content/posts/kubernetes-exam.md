@@ -42,7 +42,7 @@ spec:
 status: {}
 ```
 
-## Update the pod definition
+## Update the resource definition
 
 Apply the changes (apply the diff)
 ```sh
@@ -58,6 +58,12 @@ If you are changing a field that cannot be updated (for example the nodeName pod
 you can also use (delete and create the resources)
 ```sh
 kubectl replace --force -f <file name>
+```
+
+## Expose as a service
+```sh
+kubectl expose pod valid-pod --port=444 --name=frontend
+kubectl expose deployment nginx --port=80 --target-port=8000
 ```
 
 ## Explain command
