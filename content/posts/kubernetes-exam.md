@@ -50,3 +50,21 @@ kubectl explain replicaset
 ```
 
 Describes fields in some kubernetes object.
+
+## Update the pod definition
+
+Apply the changes (apply the diff)
+```sh
+kubectl apply -f <file name>
+```
+
+Recreate resources
+```sh
+kubectl replace -f <file name>
+```
+
+If you are changing a field that cannot be updated (for example the nodeName pod parameter)
+you can also use (delete and create the resources)
+```sh
+kubectl replace --force -f <file name>
+```
