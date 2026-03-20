@@ -3,25 +3,23 @@ title: "PostgreSQL as Your AI Database"
 date: 2026-03-20
 draft: true
 tags: ["postgresql", "ai", "databases", "pgvector"]
-summary: "You probably don't need a dedicated vector database. PostgreSQL with pgvector handles semantic search surprisingly well."
+summary: "You probably don't need a dedicated vector database. PostgreSQL with pgvector handles semantic search well enough for most workloads."
 ---
 
 Everyone building AI features right now faces the same question: where do I store my embeddings? The default answer from most tutorials is "pick a vector database" — Pinecone, Weaviate, Qdrant, take your pick. But there's a decent chance you already have the answer running in production.
 
-PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) has quietly become good enough for most use cases. And "good enough" is underselling it.
+PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) has quietly become a solid option for most use cases.
 
 ## Why not a dedicated vector database?
 
-Dedicated vector databases exist for a reason. If you're running similarity search over billions of vectors with sub-millisecond latency requirements, go for it. But most of us aren't doing that.
+Dedicated vector databases exist for a reason. If you're running similarity search over billions of vectors with sub-millisecond latency requirements, they're the right tool. But most workloads look more like this:
 
-What most of us *are* doing:
+- A few hundred thousand to a few million embeddings
+- Semantic search alongside regular relational queries
+- Filtering results by metadata (user ID, category, date range)
+- No appetite for operating yet another database in production
 
-- Storing a few hundred thousand to a few million embeddings
-- Running semantic search alongside regular relational queries
-- Wanting to filter results by metadata (user ID, category, date range)
-- Not wanting to operate yet another database in production
-
-That last point matters more than people admit. Every new piece of infrastructure is another thing to monitor, back up, secure, and debug at 3 AM. If PostgreSQL can handle your vector workload, that's one fewer service in your stack.
+That last point is worth considering seriously. Every new piece of infrastructure is another thing to monitor, back up, secure, and debug at 3 AM. If PostgreSQL can handle your vector workload, that's one fewer service in your stack.
 
 ## Setting up pgvector
 
@@ -42,7 +40,7 @@ CREATE TABLE documents (
 );
 ```
 
-The number in `vector(1536)` is the dimension of your embeddings. This depends on which model you use — OpenAI's [`text-embedding-3-small`](https://platform.openai.com/docs/models/text-embedding-3-small) outputs 1536 dimensions, while smaller models like `nomic-embed-text` use 768.
+The number in `vector(1536)` is the dimension of your embeddings. This depends on which model you use — OpenAI's `text-embedding-3-small` outputs 1536 dimensions, while smaller models like `nomic-embed-text` use 768.
 
 ## Inserting embeddings
 
@@ -70,7 +68,7 @@ with psycopg.connect("postgresql://localhost/mydb") as conn:
 
 ## Querying: finding similar documents
 
-The core operation is nearest-neighbor search. pgvector supports several [distance functions](https://github.com/pgvector/pgvector#distances):
+The core operation is nearest-neighbor search. pgvector supports several distance functions:
 
 ```sql
 -- Cosine distance (most common for text embeddings)
@@ -92,11 +90,11 @@ ORDER BY embedding <#> query_embedding
 LIMIT 10;
 ```
 
-The [`<=>`](https://github.com/pgvector/pgvector#distances) operator is cosine distance and is what you'll want for most text embedding models.
+The `<=>` operator is cosine distance and is what you'll want for most text embedding models.
 
-## The killer feature: hybrid queries
+## Hybrid queries
 
-Here's where PostgreSQL really shines over standalone vector databases. You can combine vector similarity with regular SQL filters in a single query:
+One practical advantage of using PostgreSQL is that you can combine vector similarity with regular SQL filters in a single query:
 
 ```sql
 SELECT content, embedding <=> $1 AS distance
@@ -107,9 +105,9 @@ ORDER BY embedding <=> $1
 LIMIT 10;
 ```
 
-Try doing that in a dedicated vector database. You'll either be filtering client-side (slow), using limited metadata filtering (awkward), or maintaining a separate relational store anyway (defeating the purpose).
+With a dedicated vector database, this typically means filtering client-side, working around limited metadata filtering, or maintaining a separate relational store — which partly defeats the purpose.
 
-With PostgreSQL, your vectors live alongside your relational data. Joins, CTEs, window functions — they all just work.
+Since your vectors live alongside your relational data in PostgreSQL, joins, CTEs, and window functions all work as expected.
 
 ## Indexing for performance
 
@@ -125,7 +123,7 @@ USING hnsw (embedding vector_cosine_ops)
 WITH (m = 16, ef_construction = 64);
 ```
 
-[HNSW](https://github.com/pgvector/pgvector#hnsw) (Hierarchical Navigable Small World) gives you approximate nearest neighbors with great recall. It uses more memory but is faster at query time. The `m` and `ef_construction` parameters control the trade-off between build time, memory, and recall.
+HNSW (Hierarchical Navigable Small World) gives you approximate nearest neighbors with great recall. It uses more memory but is faster at query time. The `m` and `ef_construction` parameters control the trade-off between build time, memory, and recall.
 
 ### IVFFlat
 
@@ -135,13 +133,13 @@ USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
 ```
 
-[IVFFlat](https://github.com/pgvector/pgvector#ivfflat) is faster to build and uses less memory, but requires the table to already have data before you create the index (it clusters the vectors). Set `lists` to roughly `sqrt(row_count)` for a reasonable starting point.
+IVFFlat is faster to build and uses less memory, but requires the table to already have data before you create the index (it clusters the vectors). Set `lists` to roughly `sqrt(row_count)` for a reasonable starting point.
 
 For most workloads under a few million vectors, HNSW is the better default.
 
 ## Tuning query performance
 
-You can control the [recall/speed trade-off](https://github.com/pgvector/pgvector#query-options) at query time:
+You can control the recall/speed trade-off at query time:
 
 ```sql
 -- For HNSW: higher ef_search = better recall, slower queries
@@ -167,4 +165,11 @@ But for the majority of applications — RAG pipelines, semantic search, recomme
 
 You don't need to complicate your stack to build AI features. If you're already running PostgreSQL (and statistically, you probably are), pgvector gets you 90% of the way there with zero additional infrastructure.
 
-Start simple. Add a vector column, create an HNSW index, and see how far it takes you. You might be surprised.
+Start simple. Add a vector column, create an HNSW index, and see how far it takes you.
+
+## Sources
+
+- [pgvector](https://github.com/pgvector/pgvector) — PostgreSQL extension for vector similarity search, including distance functions, HNSW, and IVFFlat indexing
+- [OpenAI text-embedding-3-small](https://platform.openai.com/docs/models/text-embedding-3-small) — OpenAI embedding model outputting 1536-dimensional vectors
+- [OpenAI Embeddings Guide](https://platform.openai.com/docs/guides/embeddings) — documentation on generating and using text embeddings
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/) — official PostgreSQL reference

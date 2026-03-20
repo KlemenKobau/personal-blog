@@ -3,12 +3,12 @@ title: "The WebAssembly Component Model"
 date: 2026-03-20
 draft: true
 tags: ["wasm", "rust", "containers"]
-summary: "The WASM Component Model makes composable, polyglot modules a real thing. Here's what it is, how it works, and where it beats containers."
+summary: "The WASM Component Model enables composable, polyglot modules. Here's what it is, how it works, and how it compares to containers."
 ---
 
 For years, WebAssembly has been "the future" of portable computation. And for years, the actual developer experience has been: compile your code to a `.wasm` blob, glue it together with JavaScript, and hope for the best. Plain Wasm modules are powerful but limited — they only speak in integers and floats, can't natively pass strings or structs, and have no standard way to talk to each other.
 
-The [Component Model](https://component-model.bytecodealliance.org/) changes that. It's the missing layer that makes Wasm modules composable, interoperable, and actually pleasant to work with across languages.
+The [Component Model](https://component-model.bytecodealliance.org/) changes that. It adds the missing layer that makes Wasm modules composable, interoperable, and practical to use across languages.
 
 ## What the Component Model actually is
 
@@ -57,7 +57,7 @@ If you've used protobuf or GraphQL schemas, WIT will feel familiar. The differen
 
 ## Building a component in Rust
 
-Let's build the greeter component from above. The tooling has gotten pretty smooth with [`cargo-component`](https://github.com/bytecodealliance/cargo-component).
+Let's build the greeter component from above using [`cargo-component`](https://github.com/bytecodealliance/cargo-component).
 
 First, install the toolchain:
 
@@ -106,7 +106,7 @@ You get a `.wasm` file in `target/wasm32-wasip1/release/`. That file is a self-d
 
 ## Composing components
 
-This is where it gets interesting. Say you have two components:
+Say you have two components:
 
 1. A `greeter` that exports a `greet` function.
 2. An `http-handler` that imports `greet` and uses it to respond to HTTP requests.
@@ -128,7 +128,7 @@ You compose them using [`wac`](https://github.com/bytecodealliance/wac) (WebAsse
 wac plug handler.wasm --plug greeter.wasm -o composed.wasm
 ```
 
-That's it. The output is a single `.wasm` file where the handler's import of `greet` is satisfied by the greeter component. No networking between services, no shared memory hacks, no IPC. The composed component runs as one unit.
+That's it. The output is a single `.wasm` file where the handler's import of `greet` is satisfied by the greeter component. There's no networking between services, no shared memory management, and no IPC involved — the composed component runs as one unit.
 
 You can keep composing. Need to swap in a different greeter that speaks French? Build a new component with the same WIT interface and plug it in. The handler doesn't change.
 
@@ -138,11 +138,11 @@ The obvious question: when would I use a Wasm component instead of a container?
 
 **Where components win:**
 
-- **Startup time**. A Wasm component starts in microseconds. Containers take seconds. For serverless and edge workloads, this matters a lot.
+- **Startup time**. A Wasm component starts in microseconds. Containers take seconds. For serverless and edge workloads, this difference is significant.
 - **Size**. A typical component is kilobytes to low megabytes. Container images are tens to hundreds of megabytes.
-- **Composition**. Wiring components together is a build-time operation with type checking. Wiring containers together is YAML, networking, and prayer.
+- **Composition**. Wiring components together is a build-time operation with type checking. Wiring containers together involves configuration files, networking setup, and considerably more moving parts.
 - **Sandboxing**. Components get capability-based security by default. They can only access what you explicitly grant. Containers have a much larger attack surface.
-- **Portability**. A Wasm component runs anywhere there's a Wasm runtime — Linux, macOS, Windows, the browser, the edge. One binary, no "works on my machine."
+- **Portability**. A Wasm component runs anywhere there's a Wasm runtime — Linux, macOS, Windows, the browser, the edge. A single binary covers all of them.
 
 **Where containers still win:**
 
@@ -155,19 +155,32 @@ The honest answer is that they're not direct competitors. Components are best fo
 
 ## Current state and what's coming
 
-The Component Model isn't vaporware. It's shipping in real runtimes today:
+The Component Model is shipping in real runtimes today:
 
-- **[Wasmtime](https://docs.wasmtime.dev/api/wasmtime/component/index.html)** has full Component Model support.
-- **[WASI 0.2](https://github.com/WebAssembly/WASI/tree/main/wasip2)** is stable and includes interfaces for HTTP, I/O, clocks, random, filesystem, and sockets.
-- **[Fermyon Spin](https://www.fermyon.com/spin)**, **[Fastly Compute](https://www.fastly.com/products/edge-compute)**, and **Cosmonic** all run component-based workloads in production.
-- **[warg](https://github.com/bytecodealliance/registry)** registries are emerging as the package manager story for components.
+- **Wasmtime** has full Component Model support.
+- **WASI 0.2** is stable and includes interfaces for HTTP, I/O, clocks, random, filesystem, and sockets.
+- **Fermyon Spin**, **Fastly Compute**, and **Cosmonic** all run component-based workloads in production.
+- **warg** registries are emerging as the package manager story for components.
 
 What's on the horizon:
 
-- **[WASI 0.3](https://github.com/WebAssembly/WASI)** is bringing async support. This is a big deal — it means components can do non-blocking I/O natively, which is essential for real server workloads.
+- **WASI 0.3** is bringing async support, meaning components will be able to do non-blocking I/O natively — an important step for server workloads.
 - **WASI 1.0** will be the stable milestone. Once it lands, the interface stability guarantees mean components built today will keep working.
 - **Language support** is broadening. Rust and Go have the best tooling right now, but Python, JavaScript, and C++ guests are actively being developed.
 
-The Component Model is at the stage where you can build real things with it, but you'll still hit rough edges. Documentation is sparse in places, error messages can be cryptic, and the toolchain is evolving fast. That said, the trajectory is clear. The pieces are falling into place.
+The Component Model is at the stage where you can build real things with it, but you'll still hit rough edges. Documentation is sparse in places, error messages can be cryptic, and the toolchain is evolving fast. That said, the trajectory is clear and progress has been steady.
 
-If you've been waiting for Wasm to become practical outside the browser, this is the thing that makes it happen.
+If you've been waiting for Wasm to become practical outside the browser, the Component Model is worth a serious look.
+
+## Sources
+
+- [Component Model](https://component-model.bytecodealliance.org/) — Bytecode Alliance documentation for the Component Model
+- [WIT specification](https://component-model.bytecodealliance.org/design/wit.html) — WebAssembly Interface Types design documentation
+- [cargo-component](https://github.com/bytecodealliance/cargo-component) — Cargo subcommand for building Wasm components in Rust
+- [wac](https://github.com/bytecodealliance/wac) — WebAssembly Compositions tool for plugging components together
+- [Wasmtime Component Model](https://docs.wasmtime.dev/api/wasmtime/component/index.html) — Wasmtime runtime support for the Component Model
+- [WASI 0.2 (wasip2)](https://github.com/WebAssembly/WASI/tree/main/wasip2) — Stable WASI preview 2 specification
+- [WASI repository](https://github.com/WebAssembly/WASI) — WebAssembly System Interface specification, including WASI 0.3 development
+- [Fermyon Spin](https://www.fermyon.com/spin) — Framework for building serverless applications with Wasm components
+- [Fastly Compute](https://www.fastly.com/products/edge-compute) — Edge compute platform running Wasm component workloads
+- [warg registry](https://github.com/bytecodealliance/registry) — Package registry protocol for WebAssembly components

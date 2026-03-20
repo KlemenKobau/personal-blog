@@ -3,7 +3,7 @@ title: "eBPF for Observability"
 date: 2026-03-20
 draft: true
 tags: ["linux", "observability", "ebpf"]
-summary: "eBPF lets you observe Linux systems from inside the kernel — no agents, no sidecars, no overhead. Here's how it works and how to start using it."
+summary: "eBPF lets you run sandboxed programs in the Linux kernel to observe syscalls, network events, and more. Here's how it works and how to start using it."
 ---
 
 If you've been anywhere near the infrastructure space lately, you've probably heard "eBPF" thrown around. It sounds intimidating — the name literally has "BPF" in it, which stands for Berkeley Packet Filter, which sounds like something from a 1993 networking textbook. Because it is.
@@ -16,14 +16,7 @@ eBPF lets you run small, sandboxed programs inside the Linux kernel. No kernel m
 
 You write a program, the kernel's built-in verifier checks that it's safe (no infinite loops, no out-of-bounds memory access, no crashing the kernel), and then it runs at specific hook points — syscalls, network events, tracepoints, function entries, you name it.
 
-Think of it as instrumenting the kernel the way you'd instrument application code. Except you don't need to modify the kernel source, and the overhead is negligible.
-
-The key properties:
-
-- **Safe** — the verifier guarantees your program won't crash the kernel
-- **Fast** — programs run in kernel space, JIT-compiled to native instructions
-- **Dynamic** — attach and detach programs at runtime, no restarts needed
-- **No kernel modification** — works on stock kernels (4.x+, [ideally 5.8+](https://docs.ebpf.io/linux/))
+Think of it as instrumenting the kernel the way you'd instrument application code. The verifier guarantees your program won't crash the kernel, and once accepted, the program is JIT-compiled to native instructions and runs in kernel space with minimal overhead. You can attach and detach programs at runtime — no restarts, no kernel recompilation, and no need to be on a custom kernel. Stock kernels from 4.x onward support eBPF, though 5.8+ is where the feature set becomes broadly useful.
 
 ## Why it matters for observability
 
@@ -80,7 +73,7 @@ Run this in one terminal, then do something like `curl https://example.com` in a
 12345    curl             -> 93.184.216.34:443
 ```
 
-That's a live, kernel-level trace of TCP connections. No agent installed. No application changes. The bpftrace program attached to the `tcp_connect` kernel function, and every time it fires, your program runs and prints the details.
+The bpftrace program attached to the `tcp_connect` kernel function, and every time it fires, your program runs and prints the details — no agent required, no application changes.
 
 Want something simpler? bpftrace ships with one-liners. Count syscalls by process:
 
@@ -88,7 +81,7 @@ Want something simpler? bpftrace ships with one-liners. Count syscalls by proces
 sudo bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'
 ```
 
-Let it run for a few seconds, hit Ctrl+C, and you get a histogram of which processes are making the most syscalls. Instant performance insight.
+Let it run for a few seconds, hit Ctrl+C, and you get a histogram of which processes are making the most syscalls — useful for spotting unexpectedly noisy services.
 
 Or trace which files are being opened:
 
@@ -96,7 +89,7 @@ Or trace which files are being opened:
 sudo bpftrace -e 'tracepoint:syscalls:sys_enter_openat { printf("%-8d %-16s %s\n", pid, comm, str(args.filename)); }'
 ```
 
-This is absurdly powerful for debugging. No strace overhead, no log parsing, just direct kernel observation.
+Compared to `strace`, which intercepts syscalls from userspace and adds noticeable overhead, these bpftrace programs run inside the kernel and have a much smaller performance footprint.
 
 ## The tooling ecosystem
 
@@ -119,21 +112,15 @@ sudo biolatency-bpfcc
 
 **[libbpf](https://github.com/libbpf/libbpf) / CO-RE** — If you're writing production eBPF programs, this is the modern approach. CO-RE (Compile Once, Run Everywhere) solves the problem of eBPF programs breaking across kernel versions. Write your program once and it runs on any kernel that supports BTF.
 
-**[Cilium](https://cilium.io/)** — Kubernetes networking and security powered by eBPF. Replaces kube-proxy, provides network policies, and gives you deep visibility into service-to-service traffic. If you're running Kubernetes, this is probably where you'll encounter eBPF first.
+**Cilium** — Kubernetes networking and security powered by eBPF. Replaces kube-proxy, provides network policies, and gives you deep visibility into service-to-service traffic. If you're running Kubernetes, this is probably where you'll encounter eBPF first.
 
-**[Pixie](https://docs.px.dev/about-pixie/what-is-pixie/)** — Auto-instrumented observability for Kubernetes. Uses eBPF to capture application-level metrics, traces, and logs without any code changes. It can show you HTTP requests, DNS queries, and database calls just by running in the cluster.
+**Pixie** — Auto-instrumented observability for Kubernetes. Uses eBPF to capture application-level metrics, traces, and logs without any code changes. It can show you HTTP requests, DNS queries, and database calls just by running in the cluster.
 
 **[Tetragon](https://tetragon.io/)** — Security observability from the Cilium project. Traces process execution, file access, and network activity for security monitoring. Think of it as an eBPF-powered audit system.
 
 ## When it makes sense
 
-eBPF is great when you need:
-
-- **Low-overhead monitoring** — you can't afford the CPU/memory cost of traditional agents
-- **Deep kernel visibility** — you need to see syscalls, network packets, scheduler events
-- **No-instrumentation tracing** — you want application-level data without modifying application code
-- **Kubernetes networking** — Cilium is a better answer than kube-proxy + iptables for most clusters
-- **Security monitoring** — real-time visibility into what processes are doing on your machines
+eBPF is most useful in scenarios where traditional tooling falls short. If you're running a latency-sensitive service and can't afford the CPU overhead of a polling agent, an eBPF program attached to the relevant kernel functions collects the same data at a fraction of the cost. If you need to debug network issues at the packet level in a Kubernetes cluster, Cilium gives you that visibility without the iptables complexity. If you want HTTP-level traces across services but can't modify the application code, Pixie can derive them from kernel-level socket data. In security contexts, Tetragon can monitor process execution and file access in real time, acting as a lightweight audit layer.
 
 ## When it doesn't
 
@@ -141,7 +128,7 @@ eBPF isn't the answer to everything.
 
 **You need Linux.** eBPF is a Linux kernel feature. If you're on Windows or macOS in production, this doesn't help. (There are early efforts on Windows, but it's not there yet.)
 
-**Kernel version matters.** The good stuff [requires kernel 5.8+](https://docs.ebpf.io/linux/). If you're stuck on older kernels (some enterprise distros), your options are limited. Check what your distro ships.
+**Kernel version matters.** The good stuff requires kernel 5.8+. If you're stuck on older kernels (some enterprise distros), your options are limited. Check what your distro ships.
 
 **It's not a replacement for application-level metrics.** eBPF can tell you that your service made an HTTP request that took 500ms. It can't tell you that the slowdown was because your business logic hit a slow code path. You still need application instrumentation for that.
 
@@ -159,4 +146,17 @@ If you're curious, here's a reasonable path:
 4. If you're on Kubernetes, try Cilium or Pixie
 5. If you want to go deeper, read Brendan Gregg's [BPF Performance Tools](https://www.brendangregg.com/bpf-performance-tools-book.html) — it's the definitive reference
 
-eBPF isn't hype. It's a fundamental shift in how we interact with the Linux kernel. The fact that you can safely run custom code in kernel space, at runtime, with near-zero overhead — that changes what's possible for observability, networking, and security. The tools built on top of it are only going to get better.
+eBPF gives you a practical way to run custom logic inside the kernel without the risks that traditionally came with that level of access. For observability, networking, and security, it opens up instrumentation approaches that were previously impractical. The ecosystem is maturing, and the tools built on top of it are steadily getting easier to use.
+
+## Sources
+
+- [eBPF](https://ebpf.io/what-is-ebpf/) — introduction to eBPF and how it works
+- [eBPF kernel version support](https://docs.ebpf.io/linux/) — feature availability by Linux kernel version
+- [bpftrace](https://github.com/bpftrace/bpftrace) — high-level tracing language for Linux
+- [BCC (BPF Compiler Collection)](https://github.com/iovisor/bcc) — toolkit with ready-made eBPF-based tracing tools
+- [libbpf](https://github.com/libbpf/libbpf) — C library for building production eBPF programs with CO-RE
+- [Cilium](https://cilium.io/) — eBPF-powered Kubernetes networking, security, and observability
+- [Pixie](https://px.dev/) — auto-instrumented observability for Kubernetes using eBPF
+- [Pixie documentation](https://docs.px.dev/about-pixie/what-is-pixie/) — detailed overview of Pixie's capabilities
+- [Tetragon](https://tetragon.io/) — eBPF-based security observability from the Cilium project
+- [BPF Performance Tools](https://www.brendangregg.com/bpf-performance-tools-book.html) — definitive reference book by Brendan Gregg

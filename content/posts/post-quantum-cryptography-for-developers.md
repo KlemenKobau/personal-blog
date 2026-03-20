@@ -6,9 +6,9 @@ tags: ["security", "cryptography"]
 summary: "Quantum computers will eventually break RSA and ECC. Here's what's replacing them and what developers should actually do about it today."
 ---
 
-Sometime in the next decade or two, a sufficiently powerful quantum computer will break RSA and elliptic curve cryptography. Not weaken them — break them entirely. Every TLS handshake, every signed binary, every encrypted secret that relies on the hardness of factoring or discrete logarithms becomes vulnerable.
+Sometime in the next decade or two, a sufficiently powerful quantum computer will break RSA and elliptic curve cryptography — not merely weaken them, but render them ineffective. Every TLS handshake, every signed binary, every encrypted secret that relies on the hardness of factoring or discrete logarithms becomes vulnerable.
 
-This isn't hypothetical hand-wraving. [NIST has already finalized new standards](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards). Browsers are already shipping hybrid key exchanges. The migration is underway.
+This is not speculative. [NIST has already finalized new standards](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards). Browsers are already shipping hybrid key exchanges. The migration is underway.
 
 Here's what you need to know.
 
@@ -23,11 +23,11 @@ But there are two reasons to care now:
 1. **Harvest now, decrypt later.** Adversaries can record encrypted traffic today and decrypt it once quantum computers are capable. If your data needs to stay confidential for 10+ years, this matters right now.
 2. **Migration takes time.** Swapping cryptographic primitives across an entire ecosystem is a multi-year effort. The time to start is before you're forced to.
 
-The timeline is fuzzy — serious estimates range from 2030 to 2045 for a cryptographically relevant quantum computer. Nobody knows for sure. But "we don't know when" is not the same as "we can ignore it."
+The timeline is fuzzy — serious estimates range from 2030 to 2045 for a cryptographically relevant quantum computer. Nobody knows for sure. But uncertainty about timing is not a reason to defer preparation.
 
 ## The new NIST standards
 
-In 2024, NIST [finalized three post-quantum cryptographic standards](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards). These are built on mathematical problems that are hard for both classical and quantum computers.
+In 2024, NIST finalized three post-quantum cryptographic standards. These are built on mathematical problems that are hard for both classical and quantum computers.
 
 ### [ML-KEM](https://csrc.nist.gov/pubs/fips/203/final) (formerly Kyber) — Key encapsulation
 
@@ -65,11 +65,11 @@ The trade-off: signatures are larger (up to ~50 KB) and signing is slower. You p
 
 ## What's already changing
 
-This isn't future stuff. Post-quantum cryptography is shipping in production systems right now.
+Post-quantum cryptography is already shipping in production systems.
 
 ### Browsers and TLS
 
-[Chrome](https://blog.chromium.org/2024/05/advancing-our-amazing-bet-on-asymmetric.html) and Firefox have enabled hybrid key exchange by default since 2024. When you connect to a site that supports it, the TLS 1.3 handshake uses **X25519Kyber768** — a combination of classical X25519 and ML-KEM-768.
+Chrome and Firefox have enabled hybrid key exchange by default since 2024. When you connect to a site that supports it, the TLS 1.3 handshake uses **X25519Kyber768** — a combination of classical X25519 and ML-KEM-768.
 
 The "hybrid" part is important. If ML-KEM turns out to have a flaw, X25519 still protects you. If quantum computers arrive, ML-KEM protects you. You get security against both threats.
 
@@ -79,12 +79,12 @@ You can check if a connection used hybrid PQ key exchange in Chrome DevTools und
 
 The major cryptographic libraries have support:
 
-- **[OpenSSL 3.5+](https://docs.openssl.org/3.5/man7/EVP_KEM-ML-KEM/)**: ML-KEM and ML-DSA support via the default provider
-- **[BoringSSL](https://boringssl.googlesource.com/boringssl/+/refs/heads/master/include/openssl/mlkem.h)**: ML-KEM support (used by Chrome, Go, and others)
-- **[AWS-LC](https://github.com/aws/aws-lc)**: Full ML-KEM and ML-DSA support
-- **[liboqs](https://openquantumsafe.org/)**: Open Quantum Safe project, provides a comprehensive collection of PQ algorithms with C and language bindings
+- **OpenSSL 3.5+**: ML-KEM and ML-DSA support via the default provider
+- **BoringSSL**: ML-KEM support (used by Chrome, Go, and others)
+- **AWS-LC**: Full ML-KEM and ML-DSA support
+- **liboqs**: Open Quantum Safe project, provides a comprehensive collection of PQ algorithms with C and language bindings
 
-If you're using [Go 1.24+](https://pkg.go.dev/crypto/tls), the standard `crypto/tls` package already supports hybrid PQ key exchange out of the box. No configuration needed — the client will prefer it when the server supports it.
+If you're using Go 1.24+, the standard `crypto/tls` package already supports hybrid PQ key exchange out of the box. No configuration needed — the client will prefer it when the server supports it.
 
 ```go
 // Go 1.24+ uses X25519Kyber768 by default in TLS 1.3
@@ -109,7 +109,7 @@ recovered_secret = private_key.decapsulate(ciphertext)
 
 ### Cloud providers
 
-AWS KMS, Google Cloud KMS, and Cloudflare have all started rolling out PQ-capable options. AWS announced ML-KEM support for TLS connections to AWS services. [Cloudflare has had PQ key exchange enabled by default](https://blog.cloudflare.com/post-quantum-for-all/) for all sites behind their CDN since late 2024.
+AWS KMS, Google Cloud KMS, and Cloudflare have all started rolling out PQ-capable options. AWS announced ML-KEM support for TLS connections to AWS services. Cloudflare has had PQ key exchange enabled by default for all sites behind their CDN since late 2024.
 
 ## Practical steps you can take today
 
@@ -163,10 +163,25 @@ Not everything needs your attention yet.
 - **Replacing all signatures immediately.** The harvest-now-decrypt-later threat applies to encryption, not signatures. Signature migration is important but less urgent. You need to worry about it before quantum computers arrive, but you have more time than with key exchange.
 - **AES and SHA.** Symmetric cryptography and hash functions are mostly fine. Grover's algorithm gives a quadratic speedup for brute-force search, which means AES-128 becomes effectively AES-64 against a quantum computer. The fix is simple: use AES-256. You probably already are.
 - **Picking winners among PQ algorithms.** ML-KEM and ML-DSA are the NIST standards. Use those. Don't go chasing exotic alternatives unless you have a very specific reason.
-- **Panicking.** The migration is happening. Browsers are doing it. Cloud providers are doing it. Your TLS library will handle most of it for you. Your job is to not be the bottleneck when the defaults change.
+- **Panicking.** The migration is well underway. Browsers and cloud providers are adopting PQ cryptography, and your TLS library will handle most of it transparently. Your role is to ensure your own systems are not the bottleneck when defaults change.
 
 ## The bottom line
 
 Post-quantum cryptography is not a future problem. The standards are finalized. The implementations are shipping. The transition is gradual and mostly invisible — your browser is probably already doing PQ key exchange right now.
 
-The practical advice is boring: know what crypto you use, test the new stuff in staging, don't start new projects on RSA, and pay attention to the size increases. That's it. No need to rewrite your stack. Just don't sleepwalk into a world where everything you encrypted is suddenly readable.
+The practical steps are straightforward: know what cryptography you depend on, test the new primitives in staging, prefer modern curves over RSA for new projects, and account for the increased sizes. You do not need to rewrite your stack — but you do need to be aware of the transition and move with it rather than be caught off guard.
+
+## Sources
+
+- [NIST post-quantum encryption standards announcement](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards) — NIST's 2024 announcement finalizing the first three PQ standards
+- [FIPS 203 — ML-KEM](https://csrc.nist.gov/pubs/fips/203/final) — NIST standard for post-quantum key encapsulation (formerly Kyber)
+- [FIPS 204 — ML-DSA](https://csrc.nist.gov/pubs/fips/204/final) — NIST standard for post-quantum digital signatures (formerly Dilithium)
+- [FIPS 205 — SLH-DSA](https://csrc.nist.gov/pubs/fips/205/final) — NIST standard for hash-based digital signatures (formerly SPHINCS+)
+- [Shor's algorithm — Wikipedia](https://en.wikipedia.org/wiki/Shor%27s_algorithm) — Quantum algorithm that breaks RSA and ECC
+- [Chrome post-quantum key exchange](https://blog.chromium.org/2024/05/advancing-our-amazing-bet-on-asymmetric.html) — Chrome's rollout of hybrid PQ key exchange
+- [OpenSSL ML-KEM documentation](https://docs.openssl.org/3.5/man7/EVP_KEM-ML-KEM/) — OpenSSL 3.5+ ML-KEM provider docs
+- [BoringSSL ML-KEM header](https://boringssl.googlesource.com/boringssl/+/refs/heads/master/include/openssl/mlkem.h) — BoringSSL's ML-KEM API
+- [AWS-LC](https://github.com/aws/aws-lc) — Amazon's general-purpose cryptographic library with PQ support
+- [Open Quantum Safe — liboqs](https://openquantumsafe.org/) — Comprehensive collection of post-quantum algorithms with C and language bindings
+- [Go crypto/tls package](https://pkg.go.dev/crypto/tls) — Go 1.24+ standard library TLS with hybrid PQ key exchange
+- [Cloudflare post-quantum for all](https://blog.cloudflare.com/post-quantum-for-all/) — Cloudflare's default PQ key exchange for all sites
