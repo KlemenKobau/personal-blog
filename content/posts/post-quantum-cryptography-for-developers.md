@@ -8,13 +8,13 @@ summary: "Quantum computers will eventually break RSA and ECC. Here's what's rep
 
 Sometime in the next decade or two, a sufficiently powerful quantum computer will break RSA and elliptic curve cryptography. Not weaken them — break them entirely. Every TLS handshake, every signed binary, every encrypted secret that relies on the hardness of factoring or discrete logarithms becomes vulnerable.
 
-This isn't hypothetical hand-wraving. NIST has already finalized new standards. Browsers are already shipping hybrid key exchanges. The migration is underway.
+This isn't hypothetical hand-wraving. [NIST has already finalized new standards](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards). Browsers are already shipping hybrid key exchanges. The migration is underway.
 
 Here's what you need to know.
 
 ## Why RSA and ECC will break
 
-Classical computers can't efficiently factor large numbers or solve the discrete logarithm problem. That's the foundation of RSA and ECC. Shor's algorithm, running on a large enough quantum computer, solves both in polynomial time.
+Classical computers can't efficiently factor large numbers or solve the discrete logarithm problem. That's the foundation of RSA and ECC. [Shor's algorithm](https://en.wikipedia.org/wiki/Shor%27s_algorithm), running on a large enough quantum computer, solves both in polynomial time.
 
 The key phrase is "large enough." Current quantum computers have a few thousand noisy qubits. Breaking RSA-2048 likely requires millions of error-corrected qubits. We're not there yet.
 
@@ -27,9 +27,9 @@ The timeline is fuzzy — serious estimates range from 2030 to 2045 for a crypto
 
 ## The new NIST standards
 
-In 2024, NIST finalized three post-quantum cryptographic standards. These are built on mathematical problems that are hard for both classical and quantum computers.
+In 2024, NIST [finalized three post-quantum cryptographic standards](https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards). These are built on mathematical problems that are hard for both classical and quantum computers.
 
-### ML-KEM (formerly Kyber) — Key encapsulation
+### [ML-KEM](https://csrc.nist.gov/pubs/fips/203/final) (formerly Kyber) — Key encapsulation
 
 This is the replacement for key exchange. Whenever you establish a shared secret — TLS handshakes, key agreement protocols — ML-KEM is what you'll use.
 
@@ -43,7 +43,7 @@ It's based on the Module Learning With Errors (MLWE) problem, a lattice-based co
 
 Compare this to X25519 where the public key is 32 bytes. The keys are bigger. We'll come back to that.
 
-### ML-DSA (formerly Dilithium) — Digital signatures
+### [ML-DSA](https://csrc.nist.gov/pubs/fips/204/final) (formerly Dilithium) — Digital signatures
 
 This replaces RSA and ECDSA signatures. Code signing, certificate chains, authenticated messages — anything that needs a digital signature.
 
@@ -57,7 +57,7 @@ Also lattice-based (MLWE/MSIS). The signatures are larger than what we're used t
 
 An ECDSA signature is around 64 bytes. ML-DSA-65 is 3,309 bytes. That's a 50x increase. Not a problem for most applications, but it adds up in certificate chains and protocols that exchange many signatures.
 
-### SLH-DSA (formerly SPHINCS+) — Hash-based signatures
+### [SLH-DSA](https://csrc.nist.gov/pubs/fips/205/final) (formerly SPHINCS+) — Hash-based signatures
 
 This is the conservative backup option for signatures. It relies only on the security of hash functions, which are extremely well-understood. If lattice-based cryptography turns out to have a weakness we haven't found yet, SLH-DSA is the fallback.
 
@@ -69,7 +69,7 @@ This isn't future stuff. Post-quantum cryptography is shipping in production sys
 
 ### Browsers and TLS
 
-Chrome and Firefox have enabled hybrid key exchange by default since 2024. When you connect to a site that supports it, the TLS 1.3 handshake uses **X25519Kyber768** — a combination of classical X25519 and ML-KEM-768.
+[Chrome](https://blog.chromium.org/2024/05/advancing-our-amazing-bet-on-asymmetric.html) and Firefox have enabled hybrid key exchange by default since 2024. When you connect to a site that supports it, the TLS 1.3 handshake uses **X25519Kyber768** — a combination of classical X25519 and ML-KEM-768.
 
 The "hybrid" part is important. If ML-KEM turns out to have a flaw, X25519 still protects you. If quantum computers arrive, ML-KEM protects you. You get security against both threats.
 
@@ -79,12 +79,12 @@ You can check if a connection used hybrid PQ key exchange in Chrome DevTools und
 
 The major cryptographic libraries have support:
 
-- **OpenSSL 3.5+**: ML-KEM and ML-DSA support via the default provider
-- **BoringSSL**: ML-KEM support (used by Chrome, Go, and others)
-- **AWS-LC**: Full ML-KEM and ML-DSA support
-- **liboqs**: Open Quantum Safe project, provides a comprehensive collection of PQ algorithms with C and language bindings
+- **[OpenSSL 3.5+](https://docs.openssl.org/3.5/man7/EVP_KEM-ML-KEM/)**: ML-KEM and ML-DSA support via the default provider
+- **[BoringSSL](https://boringssl.googlesource.com/boringssl/+/refs/heads/master/include/openssl/mlkem.h)**: ML-KEM support (used by Chrome, Go, and others)
+- **[AWS-LC](https://github.com/aws/aws-lc)**: Full ML-KEM and ML-DSA support
+- **[liboqs](https://openquantumsafe.org/)**: Open Quantum Safe project, provides a comprehensive collection of PQ algorithms with C and language bindings
 
-If you're using Go 1.24+, the standard `crypto/tls` package already supports hybrid PQ key exchange out of the box. No configuration needed — the client will prefer it when the server supports it.
+If you're using [Go 1.24+](https://pkg.go.dev/crypto/tls), the standard `crypto/tls` package already supports hybrid PQ key exchange out of the box. No configuration needed — the client will prefer it when the server supports it.
 
 ```go
 // Go 1.24+ uses X25519Kyber768 by default in TLS 1.3
@@ -109,7 +109,7 @@ recovered_secret = private_key.decapsulate(ciphertext)
 
 ### Cloud providers
 
-AWS KMS, Google Cloud KMS, and Cloudflare have all started rolling out PQ-capable options. AWS announced ML-KEM support for TLS connections to AWS services. Cloudflare has had PQ key exchange enabled by default for all sites behind their CDN since late 2024.
+AWS KMS, Google Cloud KMS, and Cloudflare have all started rolling out PQ-capable options. AWS announced ML-KEM support for TLS connections to AWS services. [Cloudflare has had PQ key exchange enabled by default](https://blog.cloudflare.com/post-quantum-for-all/) for all sites behind their CDN since late 2024.
 
 ## Practical steps you can take today
 

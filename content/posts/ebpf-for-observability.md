@@ -8,7 +8,7 @@ summary: "eBPF lets you observe Linux systems from inside the kernel — no agen
 
 If you've been anywhere near the infrastructure space lately, you've probably heard "eBPF" thrown around. It sounds intimidating — the name literally has "BPF" in it, which stands for Berkeley Packet Filter, which sounds like something from a 1993 networking textbook. Because it is.
 
-But modern eBPF has very little to do with packet filtering. It's become one of the most important technologies in Linux observability, and it's worth understanding why.
+But modern [eBPF](https://ebpf.io/what-is-ebpf/) has very little to do with packet filtering. It's become one of the most important technologies in Linux observability, and it's worth understanding why.
 
 ## What eBPF actually is
 
@@ -23,7 +23,7 @@ The key properties:
 - **Safe** — the verifier guarantees your program won't crash the kernel
 - **Fast** — programs run in kernel space, JIT-compiled to native instructions
 - **Dynamic** — attach and detach programs at runtime, no restarts needed
-- **No kernel modification** — works on stock kernels (4.x+, ideally 5.8+)
+- **No kernel modification** — works on stock kernels (4.x+, [ideally 5.8+](https://docs.ebpf.io/linux/))
 
 ## Why it matters for observability
 
@@ -37,7 +37,7 @@ Traditional observability on Linux has always been a tradeoff.
 
 eBPF sits in a sweet spot. You get kernel-level visibility with userspace safety. You can observe every syscall, every packet, every function call — with almost zero overhead because the program runs right where the events happen, not in a separate process polling for data.
 
-This is why tools like Cilium replaced kube-proxy and iptables for Kubernetes networking. It's why Pixie can give you full application traces without any code instrumentation. The data is just *there* in the kernel. eBPF lets you tap into it.
+This is why tools like [Cilium](https://cilium.io/) replaced kube-proxy and iptables for Kubernetes networking. It's why [Pixie](https://px.dev/) can give you full application traces without any code instrumentation. The data is just *there* in the kernel. eBPF lets you tap into it.
 
 ## A practical example: tracing TCP connections with bpftrace
 
@@ -102,9 +102,9 @@ This is absurdly powerful for debugging. No strace overhead, no log parsing, jus
 
 eBPF itself is a kernel feature. You interact with it through various tools and frameworks:
 
-**bpftrace** — What we just used. High-level tracing language, great for ad-hoc investigations. Think of it as awk for kernel tracing. Perfect for debugging sessions.
+**[bpftrace](https://github.com/bpftrace/bpftrace)** — What we just used. High-level tracing language, great for ad-hoc investigations. Think of it as awk for kernel tracing. Perfect for debugging sessions.
 
-**BCC (BPF Compiler Collection)** — A toolkit with dozens of ready-made tools: `tcpconnect`, `opensnoop`, `execsnoop`, `biolatency`, and many more. If you just want to run a tool and get answers, start here.
+**[BCC (BPF Compiler Collection)](https://github.com/iovisor/bcc)** — A toolkit with dozens of ready-made tools: `tcpconnect`, `opensnoop`, `execsnoop`, `biolatency`, and many more. If you just want to run a tool and get answers, start here.
 
 ```sh
 # trace all new TCP connections
@@ -117,13 +117,13 @@ sudo opensnoop-bpfcc
 sudo biolatency-bpfcc
 ```
 
-**libbpf / CO-RE** — If you're writing production eBPF programs, this is the modern approach. CO-RE (Compile Once, Run Everywhere) solves the problem of eBPF programs breaking across kernel versions. Write your program once and it runs on any kernel that supports BTF.
+**[libbpf](https://github.com/libbpf/libbpf) / CO-RE** — If you're writing production eBPF programs, this is the modern approach. CO-RE (Compile Once, Run Everywhere) solves the problem of eBPF programs breaking across kernel versions. Write your program once and it runs on any kernel that supports BTF.
 
-**Cilium** — Kubernetes networking and security powered by eBPF. Replaces kube-proxy, provides network policies, and gives you deep visibility into service-to-service traffic. If you're running Kubernetes, this is probably where you'll encounter eBPF first.
+**[Cilium](https://cilium.io/)** — Kubernetes networking and security powered by eBPF. Replaces kube-proxy, provides network policies, and gives you deep visibility into service-to-service traffic. If you're running Kubernetes, this is probably where you'll encounter eBPF first.
 
-**Pixie** — Auto-instrumented observability for Kubernetes. Uses eBPF to capture application-level metrics, traces, and logs without any code changes. It can show you HTTP requests, DNS queries, and database calls just by running in the cluster.
+**[Pixie](https://docs.px.dev/about-pixie/what-is-pixie/)** — Auto-instrumented observability for Kubernetes. Uses eBPF to capture application-level metrics, traces, and logs without any code changes. It can show you HTTP requests, DNS queries, and database calls just by running in the cluster.
 
-**Tetragon** — Security observability from the Cilium project. Traces process execution, file access, and network activity for security monitoring. Think of it as an eBPF-powered audit system.
+**[Tetragon](https://tetragon.io/)** — Security observability from the Cilium project. Traces process execution, file access, and network activity for security monitoring. Think of it as an eBPF-powered audit system.
 
 ## When it makes sense
 
@@ -141,7 +141,7 @@ eBPF isn't the answer to everything.
 
 **You need Linux.** eBPF is a Linux kernel feature. If you're on Windows or macOS in production, this doesn't help. (There are early efforts on Windows, but it's not there yet.)
 
-**Kernel version matters.** The good stuff requires kernel 5.8+. If you're stuck on older kernels (some enterprise distros), your options are limited. Check what your distro ships.
+**Kernel version matters.** The good stuff [requires kernel 5.8+](https://docs.ebpf.io/linux/). If you're stuck on older kernels (some enterprise distros), your options are limited. Check what your distro ships.
 
 **It's not a replacement for application-level metrics.** eBPF can tell you that your service made an HTTP request that took 500ms. It can't tell you that the slowdown was because your business logic hit a slow code path. You still need application instrumentation for that.
 

@@ -8,7 +8,7 @@ summary: "The WASM Component Model makes composable, polyglot modules a real thi
 
 For years, WebAssembly has been "the future" of portable computation. And for years, the actual developer experience has been: compile your code to a `.wasm` blob, glue it together with JavaScript, and hope for the best. Plain Wasm modules are powerful but limited — they only speak in integers and floats, can't natively pass strings or structs, and have no standard way to talk to each other.
 
-The Component Model changes that. It's the missing layer that makes Wasm modules composable, interoperable, and actually pleasant to work with across languages.
+The [Component Model](https://component-model.bytecodealliance.org/) changes that. It's the missing layer that makes Wasm modules composable, interoperable, and actually pleasant to work with across languages.
 
 ## What the Component Model actually is
 
@@ -25,7 +25,7 @@ Think of it like this: core Wasm is assembly. The Component Model is a calling c
 
 ## WIT: WebAssembly Interface Types
 
-WIT is the IDL (Interface Definition Language) for the Component Model. It defines the contract between components — what functions they expose, what types they use, and what they depend on.
+[WIT](https://component-model.bytecodealliance.org/design/wit.html) is the IDL (Interface Definition Language) for the Component Model. It defines the contract between components — what functions they expose, what types they use, and what they depend on.
 
 Here's what a simple WIT file looks like:
 
@@ -57,7 +57,7 @@ If you've used protobuf or GraphQL schemas, WIT will feel familiar. The differen
 
 ## Building a component in Rust
 
-Let's build the greeter component from above. The tooling has gotten pretty smooth with `cargo-component`.
+Let's build the greeter component from above. The tooling has gotten pretty smooth with [`cargo-component`](https://github.com/bytecodealliance/cargo-component).
 
 First, install the toolchain:
 
@@ -122,7 +122,7 @@ world handler {
 }
 ```
 
-You compose them using `wac` (WebAssembly Compositions):
+You compose them using [`wac`](https://github.com/bytecodealliance/wac) (WebAssembly Compositions):
 
 ```sh
 wac plug handler.wasm --plug greeter.wasm -o composed.wasm
@@ -157,14 +157,14 @@ The honest answer is that they're not direct competitors. Components are best fo
 
 The Component Model isn't vaporware. It's shipping in real runtimes today:
 
-- **Wasmtime** has full Component Model support.
-- **WASI 0.2** is stable and includes interfaces for HTTP, I/O, clocks, random, filesystem, and sockets.
-- **Fermyon Spin**, **Fastly Compute**, and **Cosmonic** all run component-based workloads in production.
-- **warg** registries are emerging as the package manager story for components.
+- **[Wasmtime](https://docs.wasmtime.dev/api/wasmtime/component/index.html)** has full Component Model support.
+- **[WASI 0.2](https://github.com/WebAssembly/WASI/tree/main/wasip2)** is stable and includes interfaces for HTTP, I/O, clocks, random, filesystem, and sockets.
+- **[Fermyon Spin](https://www.fermyon.com/spin)**, **[Fastly Compute](https://www.fastly.com/products/edge-compute)**, and **Cosmonic** all run component-based workloads in production.
+- **[warg](https://github.com/bytecodealliance/registry)** registries are emerging as the package manager story for components.
 
 What's on the horizon:
 
-- **WASI 0.3** is bringing async support. This is a big deal — it means components can do non-blocking I/O natively, which is essential for real server workloads.
+- **[WASI 0.3](https://github.com/WebAssembly/WASI)** is bringing async support. This is a big deal — it means components can do non-blocking I/O natively, which is essential for real server workloads.
 - **WASI 1.0** will be the stable milestone. Once it lands, the interface stability guarantees mean components built today will keep working.
 - **Language support** is broadening. Rust and Go have the best tooling right now, but Python, JavaScript, and C++ guests are actively being developed.
 

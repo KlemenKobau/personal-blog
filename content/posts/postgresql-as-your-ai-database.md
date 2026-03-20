@@ -42,7 +42,7 @@ CREATE TABLE documents (
 );
 ```
 
-The number in `vector(1536)` is the dimension of your embeddings. This depends on which model you use — OpenAI's `text-embedding-3-small` outputs 1536 dimensions, while smaller models like `nomic-embed-text` use 768.
+The number in `vector(1536)` is the dimension of your embeddings. This depends on which model you use — OpenAI's [`text-embedding-3-small`](https://platform.openai.com/docs/models/text-embedding-3-small) outputs 1536 dimensions, while smaller models like `nomic-embed-text` use 768.
 
 ## Inserting embeddings
 
@@ -70,7 +70,7 @@ with psycopg.connect("postgresql://localhost/mydb") as conn:
 
 ## Querying: finding similar documents
 
-The core operation is nearest-neighbor search. pgvector supports several distance functions:
+The core operation is nearest-neighbor search. pgvector supports several [distance functions](https://github.com/pgvector/pgvector#distances):
 
 ```sql
 -- Cosine distance (most common for text embeddings)
@@ -92,7 +92,7 @@ ORDER BY embedding <#> query_embedding
 LIMIT 10;
 ```
 
-The `<=>` operator is cosine distance and is what you'll want for most text embedding models.
+The [`<=>`](https://github.com/pgvector/pgvector#distances) operator is cosine distance and is what you'll want for most text embedding models.
 
 ## The killer feature: hybrid queries
 
@@ -125,7 +125,7 @@ USING hnsw (embedding vector_cosine_ops)
 WITH (m = 16, ef_construction = 64);
 ```
 
-HNSW (Hierarchical Navigable Small World) gives you approximate nearest neighbors with great recall. It uses more memory but is faster at query time. The `m` and `ef_construction` parameters control the trade-off between build time, memory, and recall.
+[HNSW](https://github.com/pgvector/pgvector#hnsw) (Hierarchical Navigable Small World) gives you approximate nearest neighbors with great recall. It uses more memory but is faster at query time. The `m` and `ef_construction` parameters control the trade-off between build time, memory, and recall.
 
 ### IVFFlat
 
@@ -135,13 +135,13 @@ USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
 ```
 
-IVFFlat is faster to build and uses less memory, but requires the table to already have data before you create the index (it clusters the vectors). Set `lists` to roughly `sqrt(row_count)` for a reasonable starting point.
+[IVFFlat](https://github.com/pgvector/pgvector#ivfflat) is faster to build and uses less memory, but requires the table to already have data before you create the index (it clusters the vectors). Set `lists` to roughly `sqrt(row_count)` for a reasonable starting point.
 
 For most workloads under a few million vectors, HNSW is the better default.
 
 ## Tuning query performance
 
-You can control the recall/speed trade-off at query time:
+You can control the [recall/speed trade-off](https://github.com/pgvector/pgvector#query-options) at query time:
 
 ```sql
 -- For HNSW: higher ef_search = better recall, slower queries
