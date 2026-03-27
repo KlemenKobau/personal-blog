@@ -79,3 +79,15 @@ Describes fields in some kubernetes object.
 ```sh
 kubectl get pods --watch
 ```
+
+## Taints and tolerations
+
+Add taint
+```sh
+kubectl taint nodes node1 key1=value1:NoSchedule
+```
+
+Remove taint
+```sh
+kubectl taint nodes node1 key1=value1:NoSchedule-
+```
