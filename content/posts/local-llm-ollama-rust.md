@@ -35,7 +35,21 @@ The sky is blue due to a phenomenon called **Rayleigh scattering**. ...
 The process takes ~15s, which is quite a long time due to thinking and
 because I am running NVIDIA 4060, which is not that powerful.
 
-You can also turn off thinking by doing
+If your responses slow, check that
+Ollama is using your GPU instead of your CPU.
+You can check that by running the following.
+If there is no model in the output, run a model with some question first.
+```sh
+$ ollama ps
+NAME          ID              SIZE      PROCESSOR    CONTEXT    UNTIL              
+qwen3.5:4b    2a654d98e6fb    5.9 GB    100% GPU     4096       4 minutes from now    
+```
+This shows if the model was really ran on the GPU and also shows how long it will be cached for (default is 5min).
+The initial request will be slower, but on next requests, the model
+will be cached and so the requests will be faster.
+
+If you want even faster response times you can also turn off 
+thinking by doing
 ```
 $ ollama 
 >>> /set nothink
