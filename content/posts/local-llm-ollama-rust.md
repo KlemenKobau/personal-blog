@@ -60,6 +60,8 @@ tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 ```
 
+The main dependency here is [ollama-rs](https://github.com/pepperoni21/ollama-rs), look at their official documents for more examples.
+
 A simple program looks like this
 
 ```rs
