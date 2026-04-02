@@ -2,7 +2,7 @@
 title: "Messing around with blender geometry nodes"
 date: 2026-04-02
 draft: false
-tags: ["blender", "Geometry nodes"]
+tags: ["blender", "geometry nodes"]
 summary: "Using blender geometry nodes for procedural generation"
 ---
 
