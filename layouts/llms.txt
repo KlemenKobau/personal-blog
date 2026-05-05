@@ -1,0 +1,46 @@
+{{- /* llms.txt - follows the llms.txt spec (https://llmstxt.org/) */ -}}
+# {{ site.Title }}
+
+> {{ site.Params.homeInfoParams.Content }}. Personal blog of {{ site.Params.author }}, a backend developer based in Slovenia with experience in Java, Kubernetes, Rust, and Python.
+
+## Pages
+
+{{- $orphans := where site.RegularPages "Section" "" -}}
+{{- range $p := $orphans }}
+  {{- if and (not $p.Params.searchHidden) (ne $p.Layout `archives`) (ne $p.Layout `search`) (not $p.IsHome) }}
+- [{{ $p.Title }}]({{ $p.Permalink }}){{ with $p.Params.summary }}: {{ . }}{{ end }}
+  {{- end -}}
+{{- end }}
+
+{{- /* CV page - always include even if searchHidden */ -}}
+{{- with site.GetPage "/cv" }}
+- [{{ .Title }}]({{ .Permalink }}): Backend developer CV with experience, skills, and projects
+{{- end }}
+
+{{- define "llms_print_section" -}}
+{{- $section := .section -}}
+{{- $depth := .depth -}}
+{{- if or (gt (len $section.RegularPages) 0) (gt (len $section.Sections) 0) -}}
+{{- $hashes := strings.Repeat (add $depth 1) "#" }}
+
+{{ printf "%s %s" $hashes $section.Title }}
+
+{{- range $p := $section.RegularPages }}
+  {{- if and (not $p.Params.searchHidden) (ne $p.Layout `archives`) (ne $p.Layout `search`) }}
+- [{{ $p.Title }}]({{ $p.Permalink }}){{ with $p.Params.summary }}: {{ . }}{{ end }}
+  {{- end -}}
+{{- end -}}
+
+{{- range $s := $section.Sections -}}
+{{- template "llms_print_section" (dict "section" $s "depth" (add $depth 1)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- range site.Sections -}}
+{{- template "llms_print_section" (dict "section" . "depth" 1) -}}
+{{- end }}
+
+## Optional
+
+- [llms-full.txt]({{ "llms-full.txt" | absURL }}): Full content of all pages for comprehensive context

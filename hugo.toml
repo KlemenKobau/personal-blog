@@ -33,7 +33,7 @@ pygmentsUseClasses = true
 
 [[params.socialIcons]]
   name = "cv"
-  url = "https://klemenkobau.gitlab.io/cv/klemen-kobau.pdf"
+  url = "/cv/"
 
 [[params.socialIcons]]
   name = "github"
@@ -88,5 +88,11 @@ baseName = "llms"
 isPlainText = true
 notAlternative = true
 
+[outputFormats.llms-full]
+mediaType = "text/plain"
+baseName = "llms-full"
+isPlainText = true
+notAlternative = true
+
 [outputs]
-home = [ "HTML", "RSS", "JSON", "llms" ]
+home = [ "HTML", "RSS", "JSON", "llms", "llms-full" ]
