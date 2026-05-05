@@ -33,7 +33,7 @@ pygmentsUseClasses = true
 
 [[params.socialIcons]]
   name = "cv"
-  url = "/cv/"
+  url = "https://klemenkobau.gitlab.io/cv/klemen-kobau.pdf"
 
 [[params.socialIcons]]
   name = "github"

@@ -3,14 +3,6 @@
 
 > {{ site.Params.homeInfoParams.Content }}. Personal blog of {{ site.Params.author }}, a backend developer based in Slovenia with experience in Java, Kubernetes, Rust, and Python.
 
-{{- /* CV page */ -}}
-{{- with site.GetPage "/cv" }}
-
-## {{ .Title }}
-
-{{ .RawContent }}
-{{- end }}
-
 {{- /* Orphan pages */ -}}
 {{- $orphans := where site.RegularPages "Section" "" -}}
 {{- range $p := $orphans }}

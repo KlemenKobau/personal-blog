@@ -12,11 +12,6 @@
   {{- end -}}
 {{- end }}
 
-{{- /* CV page - always include even if searchHidden */ -}}
-{{- with site.GetPage "/cv" }}
-- [{{ .Title }}]({{ .Permalink }}): Backend developer CV with experience, skills, and projects
-{{- end }}
-
 {{- define "llms_print_section" -}}
 {{- $section := .section -}}
 {{- $depth := .depth -}}
