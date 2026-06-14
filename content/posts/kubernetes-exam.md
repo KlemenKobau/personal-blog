@@ -137,3 +137,12 @@ spec:
       cpu: 100m
     type: Container
 ```
+
+When changing the limits on the pod spec directly, kubernetes will not allow this!
+But exiting out of the edit mode will create a temporary file and the
+path to the file will be printed in the response
+
+```
+error...
+A copy of your changes has been saved to "/tmp/...yaml" IMPORTANT
+```
