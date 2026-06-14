@@ -91,3 +91,49 @@ Remove taint
 ```sh
 kubectl taint nodes node1 key1=value1:NoSchedule-
 ```
+
+## Change labels
+
+```sh
+# Update pod 'foo' with the label 'unhealthy' and the value 'true'
+kubectl label pods foo unhealthy=true
+
+# Update pod 'foo' with the label 'status' and the value 'unhealthy', overwriting any existing value
+kubectl label --overwrite pods foo status=unhealthy
+
+# Update all pods in the namespace
+kubectl label pods --all status=unhealthy
+
+# Update a pod identified by the type and name in "pod.json"
+kubectl label -f pod.json status=unhealthy
+
+# Update pod 'foo' only if the resource is unchanged from version 1
+kubectl label pods foo status=unhealthy --resource-version=1
+
+# Update pod 'foo' by removing a label named 'bar' if it exists
+# Does not require the --overwrite flag
+kubectl label pods foo bar-
+```
+
+
+## Set default resource limits and requests
+
+Relevant https://kubernetes.io/docs/concepts/policy/limit-range/
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-resource-constraint
+spec:
+  limits:
+  - default: # this section defines default limits
+      cpu: 500m
+    defaultRequest: # this section defines default requests
+      cpu: 500m
+    max: # max and min define the limit range (pod definition cannot override this)
+      cpu: "1"
+    min:
+      cpu: 100m
+    type: Container
+```
