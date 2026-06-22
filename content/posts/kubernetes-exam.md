@@ -115,7 +115,6 @@ kubectl label pods foo status=unhealthy --resource-version=1
 kubectl label pods foo bar-
 ```
 
-
 ## Set default resource limits and requests
 
 Relevant https://kubernetes.io/docs/concepts/policy/limit-range/
@@ -145,4 +144,18 @@ path to the file will be printed in the response
 ```
 error...
 A copy of your changes has been saved to "/tmp/...yaml" IMPORTANT
+```
+
+## Important kubelet system paths
+
+If the kubelet is running as a systemd process then use `systemctl status kubelet`. The following paths are the defaults and **can be overridden**
+
+Kubelet config path, written in the service status ([kubelet integration](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/kubelet-integration/))
+```
+/var/lib/kubelet/config.yaml
+```
+
+Kubernetes manifests for static pods, written in the kubelet config, specifically the *staticPodPath* variable ([static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/))
+```
+/etc/kubernetes/manifests/
 ```
