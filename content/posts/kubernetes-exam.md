@@ -42,6 +42,12 @@ spec:
 status: {}
 ```
 
+## [Config map](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_configmap/)
+
+```sh
+kubectl create configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--dry-run=server|client|none]
+```
+
 ## Update the resource definition
 
 Apply the changes (apply the diff)
@@ -159,3 +165,46 @@ Kubernetes manifests for static pods, written in the kubelet config, specificall
 ```
 /etc/kubernetes/manifests/
 ```
+
+## Priority classes
+Link: [Pod priority and preemption](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)
+
+Default priority classes
+```sh
+root@controlplane ~ ➜  k get priorityclasses.scheduling.k8s.io 
+NAME                      VALUE        GLOBAL-DEFAULT   AGE   PREEMPTIONPOLICY
+system-cluster-critical   2000000000   false            34m   PreemptLowerPriority
+system-node-critical      2000001000   false            34m   PreemptLowerPriority
+```
+
+```yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority-nonpreempting
+value: 1000000
+preemptionPolicy: Never <-- If set to never it will not kill existing pods with a lower priority
+globalDefault: false
+description: "This priority class will not cause other pods to be preempted."
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  ...
+spec:
+  containers:
+  - name: nginx
+    ...
+  priorityClassName: high-priority
+
+```
+
+## [Multiple schedulers](https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/)
+
+A scheduler can also have multiple [profiles](https://kubernetes.io/docs/reference/scheduling/config/#multiple-profiles).
+This may be preferable to multiple schedulers, since the profiles run in the same binary and
+avoids race conditions between different schedulers (2 schedulers want to schedule 2 pods on a node with resources for only one).
+
+## [Admission controllers](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/)
