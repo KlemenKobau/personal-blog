@@ -208,3 +208,31 @@ This may be preferable to multiple schedulers, since the profiles run in the sam
 avoids race conditions between different schedulers (2 schedulers want to schedule 2 pods on a node with resources for only one).
 
 ## [Admission controllers](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/)
+
+## Application lifecycle management
+
+### [Rolling updates and rollbacks](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/)
+
+```sh
+# Rollback to the previous deployment
+kubectl rollout undo deployment/abc
+
+# Check the rollout status of a daemonset
+kubectl rollout status daemonset/foo
+
+# Restart a deployment
+kubectl rollout restart deployment/abc
+
+# Restart deployments with the 'app=nginx' label
+kubectl rollout restart deployment --selector=app=nginx
+
+# View the rollout history of a deployment
+kubectl rollout history deployment/abc
+
+# View the details of daemonset revision 3
+kubectl rollout history daemonset/abc --revision=3
+```
+
+Deployment strategies
+- [Rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment)
+- [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment)
