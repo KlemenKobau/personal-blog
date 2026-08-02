@@ -48,6 +48,24 @@ status: {}
 kubectl create configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--dry-run=server|client|none]
 ```
 
+## Commands and arguments
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: command-demo
+  labels:
+    purpose: demonstrate-command
+spec:
+  containers:
+  - name: command-demo-container
+    image: debian
+    command: ["printenv"] # <-- this overrides the ENTRYPOINT defined in the docker image
+    args: ["HOSTNAME", "KUBERNETES_PORT"] # <-- this overrides the CMD defined in the docker image
+  restartPolicy: OnFailure
+```
+
 ## Update the resource definition
 
 Apply the changes (apply the diff)
