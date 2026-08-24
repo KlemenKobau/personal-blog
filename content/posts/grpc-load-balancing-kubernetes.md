@@ -5,7 +5,7 @@ draft: false
 tags: ["kubernetes", "Quarkus", "gRPC"]
 summary: "Load balancing gRPC requests between Quarkus services in Kubernetes with Stork"
 ---
-gRPC uses sticky sessions, which is problematic when load balancing using Kubernetes services.
+GRPC uses sticky sessions, which is problematic when load balancing using Kubernetes services.
 The first backend that receives the request will keep the connection open and
 all further requests will get routed to it.
 
