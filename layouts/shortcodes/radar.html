@@ -1,8 +1,8 @@
 {{- $sheet := .Get "sheet" -}}
-{{- $width := .Get "width" | default "1450" -}}
-{{- $height := .Get "height" | default "1200" -}}
-<div class="radar-embed" data-sheet="{{ $sheet }}" data-width="{{ $width }}" data-height="{{ $height }}">
+{{- $size := .Get "size" | default "800" -}}
+<div class="radar-embed" data-sheet="{{ $sheet }}" data-size="{{ $size }}">
   <svg id="radar"></svg>
+  <div class="radar-legend"></div>
   <div class="radar-detail" hidden></div>
 </div>
 <style>
@@ -12,37 +12,29 @@
   }
   .radar-embed svg#radar {
     display: block;
-    width: 100%;
+    width: min(100%, 800px);
     height: auto;
+    margin: 0 auto;
   }
-  /* radar.js leaves the title, the footer movement key, the quadrant legend
-     headings and every legend entry label with no fill at all, so they fall
-     back to the SVG default (black) and vanish on the dark theme. Give only
-     those a themed color.
-
-     The :not([fill]) guard matters: CSS declarations beat SVG presentation
-     attributes, so a bare `text { fill: ... }` would also override the
-     fill="white" ATTRIBUTE that highlightLegendItem() sets on hover and kill
-     the highlight. Excluding elements that carry a fill attribute lets the
-     attribute win again the moment it is added (and removing it on mouseout
-     brings this rule back). Everything radar.js colors via .style(...) —
-     ring labels, blip numbers, bubble text, the date — has an inline style,
-     which outranks this rule regardless. */
-  .radar-embed svg#radar text:not([fill]) {
-    fill: var(--content);
+  .radar-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
   }
-  /* radar.js also draws a large, faint ring-name watermark ("ADOPT",
-     "TRIAL", "ASSESS", "CAUTION") inside the plot itself, at a y position
-     fixed to the ring radius (not exposed as a config option, so it can't
-     be repositioned). With our larger-than-default entry counts this
-     collided visually with the section headings beside it — and moving the
-     headings via legend_offset just shifted the collision elsewhere (into
-     the page's own title) rather than fixing it. The ring names are already
-     shown, un-ambiguously, as the small headings above each quadrant's own
-     list, so the watermark is pure redundant decoration: drop it instead of
-     chasing its position. It's the only text radar.js draws at 42px. */
-  .radar-embed svg#radar text[style*="42px"] {
-    display: none;
+  .radar-legend-quadrant h3 {
+    margin-bottom: 0.5rem;
+  }
+  .radar-legend-quadrant h4 {
+    margin: 0.75rem 0 0.25rem;
+    font-size: 0.9rem;
+  }
+  .radar-legend-quadrant ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .radar-legend-quadrant a {
+    color: var(--content);
   }
   .radar-detail {
     max-width: 720px;
@@ -58,6 +50,5 @@
   }
 </style>
 <script src="{{ "js/vendor/d3.min.js" | relURL }}"></script>
-<script src="{{ "js/vendor/radar.js" | relURL }}"></script>
 <script src="{{ "js/radar-mapping.js" | relURL }}"></script>
 <script src="{{ "js/radar-loader.js" | relURL }}"></script>

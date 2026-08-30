@@ -135,3 +135,35 @@ test("sanitizeHtml neutralizes javascript: URLs after a / attribute separator", 
   assert.equal(RadarMapping.sanitizeHtml('<img/src=javascript:alert(1)>'), '<img/src="#">');
   assert.equal(RadarMapping.sanitizeHtml('<a/href="javascript:alert(1)">x</a>'), '<a/href="#">x</a>');
 });
+
+test("ringRadiusBounds scales proportionally to the given max radius", () => {
+  assert.deepEqual(RadarMapping.ringRadiusBounds(0, 400), { inner: 20, outer: 100 });
+  assert.deepEqual(RadarMapping.ringRadiusBounds(3, 400), { inner: 300, outer: 392 });
+  // same ring, different plot size -> proportional, not a fixed pixel band
+  assert.deepEqual(RadarMapping.ringRadiusBounds(0, 800), { inner: 40, outer: 200 });
+});
+
+test("ringRadiusBounds covers all 4 rings without gaps or overlaps", () => {
+  for (let i = 0; i < 3; i++) {
+    const outer = RadarMapping.ringRadiusBounds(i, 1000).outer;
+    const nextInner = RadarMapping.ringRadiusBounds(i + 1, 1000).inner;
+    assert.equal(outer, nextInner);
+  }
+});
+
+test("quadrantAngleBounds gives each of the 4 quadrants a distinct 90-degree wedge", () => {
+  assert.deepEqual(RadarMapping.quadrantAngleBounds(0), { startDeg: 0, endDeg: 90 });
+  assert.deepEqual(RadarMapping.quadrantAngleBounds(1), { startDeg: 90, endDeg: 180 });
+  assert.deepEqual(RadarMapping.quadrantAngleBounds(2), { startDeg: 180, endDeg: 270 });
+  assert.deepEqual(RadarMapping.quadrantAngleBounds(3), { startDeg: 270, endDeg: 360 });
+});
+
+test("polarToXY converts angle/radius to cartesian coordinates", () => {
+  const east = RadarMapping.polarToXY(0, 100);
+  assert.ok(Math.abs(east.x - 100) < 1e-9);
+  assert.ok(Math.abs(east.y - 0) < 1e-9);
+
+  const south = RadarMapping.polarToXY(90, 100);
+  assert.ok(Math.abs(south.x - 0) < 1e-9);
+  assert.ok(Math.abs(south.y - 100) < 1e-9);
+});
