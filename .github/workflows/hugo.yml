@@ -38,6 +38,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Run JS unit tests
+        run: node --test test/radar-mapping.test.js
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
