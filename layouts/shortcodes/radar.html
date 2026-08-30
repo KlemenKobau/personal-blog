@@ -1,0 +1,11 @@
+{{- $sheet := .Get "sheet" -}}
+{{- $height := .Get "height" | default "800" -}}
+{{- $q := querify "documentId" $sheet -}}
+{{- $src := printf "%s?%s" ("radar/" | relURL) $q -}}
+<iframe
+  src="{{ $src | safeURL }}"
+  width="100%"
+  height="{{ $height }}"
+  style="border:0"
+  loading="lazy"
+  title="Tech Radar"></iframe>
