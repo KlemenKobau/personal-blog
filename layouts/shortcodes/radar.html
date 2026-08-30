@@ -1,6 +1,6 @@
 {{- $sheet := .Get "sheet" -}}
 {{- $width := .Get "width" | default "1450" -}}
-{{- $height := .Get "height" | default "1000" -}}
+{{- $height := .Get "height" | default "1200" -}}
 <div class="radar-embed" data-sheet="{{ $sheet }}" data-width="{{ $width }}" data-height="{{ $height }}">
   <svg id="radar"></svg>
   <div class="radar-detail" hidden></div>

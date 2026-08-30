@@ -64,7 +64,22 @@
         quadrants: RadarMapping.buildQuadrantsConfig(),
         rings: RadarMapping.buildRingsConfig(),
         print_layout: true,
-        entries: entries
+        entries: entries,
+        // radar.js's own ring-name watermark (e.g. "CAUTION") is drawn at a
+        // fixed y of -(ring radius)+62, which isn't exposed as a config
+        // option — for the outermost ring that lands at y=-338 from center,
+        // regardless of width/height. Its default legend_offset for the top
+        // two quadrants (index 2, 3) puts their section header at y=-355,
+        // only ~17px away — the two visibly collided in production. Push
+        // those two headers further out (y=-420 instead of -310, header
+        // lands at -465) for a clean ~130px gap; x values and the bottom two
+        // quadrants are untouched, this only nudges vertical spacing.
+        legend_offset: [
+          { x: 450, y: 90 },
+          { x: -675, y: 90 },
+          { x: -675, y: -420 },
+          { x: 450, y: -420 }
+        ]
       });
 
       // Make the fixed-pixel SVG scale responsively: radar_visualization()
