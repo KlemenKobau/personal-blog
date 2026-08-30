@@ -112,3 +112,13 @@ test("THEME_COLORS has both light and dark palettes", () => {
   assert.equal(RadarMapping.THEME_COLORS.light.background, "#ffffff");
   assert.equal(RadarMapping.THEME_COLORS.dark.background, "#1d1e20");
 });
+
+test("sanitizeHtml strips unquoted inline event handler attributes", () => {
+  const input = '<img src="x" onerror=alert(1)>';
+  assert.equal(RadarMapping.sanitizeHtml(input), '<img src="x">');
+});
+
+test("sanitizeHtml neutralizes unquoted javascript: hrefs", () => {
+  const input = '<a href=javascript:alert(1)>click</a>';
+  assert.equal(RadarMapping.sanitizeHtml(input), '<a href="#">click</a>');
+});

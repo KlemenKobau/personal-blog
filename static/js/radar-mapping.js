@@ -36,10 +36,10 @@
     var out = String(html === null || html === undefined ? "" : html);
     out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, "");
     out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, "");
-    out = out.replace(/\s+on[a-z]+\s*=\s*"(?:[^"\\]|\\.)*"/gi, "");
-    out = out.replace(/\s+on[a-z]+\s*=\s*'(?:[^'\\]|\\.)*'/gi, "");
+    out = out.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
     out = out.replace(/(href|src)\s*=\s*"\s*javascript:[^"]*"/gi, '$1="#"');
     out = out.replace(/(href|src)\s*=\s*'\s*javascript:[^']*'/gi, "$1='#'");
+    out = out.replace(/(href|src)\s*=\s*javascript:[^\s>]*/gi, '$1="#"');
     return out;
   }
 
