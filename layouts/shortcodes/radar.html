@@ -15,6 +15,22 @@
     width: 100%;
     height: auto;
   }
+  /* radar.js leaves the title, the footer movement key, the quadrant legend
+     headings and every legend entry label with no fill at all, so they fall
+     back to the SVG default (black) and vanish on the dark theme. Give only
+     those a themed color.
+
+     The :not([fill]) guard matters: CSS declarations beat SVG presentation
+     attributes, so a bare `text { fill: ... }` would also override the
+     fill="white" ATTRIBUTE that highlightLegendItem() sets on hover and kill
+     the highlight. Excluding elements that carry a fill attribute lets the
+     attribute win again the moment it is added (and removing it on mouseout
+     brings this rule back). Everything radar.js colors via .style(...) —
+     ring labels, blip numbers, bubble text, the date — has an inline style,
+     which outranks this rule regardless. */
+  .radar-embed svg#radar text:not([fill]) {
+    fill: var(--content);
+  }
   .radar-detail {
     max-width: 720px;
     margin: 1.5rem auto 0;
