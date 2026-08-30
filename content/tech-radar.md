@@ -9,4 +9,4 @@ A living map of the technologies, tools, techniques, and platforms I'm tracking 
 
 ---
 
-Radar powered by [ThoughtWorks Build Your Own Radar](https://github.com/thoughtworks/build-your-own-radar) (AGPL-3.0), pinned at [v1.2.0](https://github.com/thoughtworks/build-your-own-radar/releases/tag/v1.2.0), unmodified.
+Radar powered by [Zalando tech-radar](https://github.com/zalando/tech-radar) (MIT), pinned at [`ebcbce3`](https://github.com/zalando/tech-radar/commit/ebcbce3a7281c02ff182e58dc6781b1c9c22613f), unmodified.
