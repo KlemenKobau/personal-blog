@@ -77,6 +77,19 @@ jobs:
           key: hugo-${{ github.run_id }}
           restore-keys:
             hugo-
+      - name: Build BYOR into static/radar
+        run: |
+          set -euo pipefail
+          BYOR_REF="v1.2.0"
+          git clone --depth 1 --branch "$BYOR_REF" \
+            https://github.com/thoughtworks/build-your-own-radar.git /tmp/byor
+          cd /tmp/byor
+          npm ci
+          ASSET_PATH=/radar/ npm run build:prod
+          cd "${GITHUB_WORKSPACE}"
+          mkdir -p static/radar static/images
+          cp -r /tmp/byor/dist/* static/radar/
+          cp -r /tmp/byor/dist/images/* static/images/
       - name: Build the site
         run: |
           hugo \

@@ -1,6 +1,8 @@
 # Hugo build output
 public/
 resources/_gen/
+static/radar/
+static/images/
 
 # Hugo cache
 .hugo_build.lock
