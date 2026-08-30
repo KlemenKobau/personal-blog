@@ -9,6 +9,12 @@ Personal blog at kkobau.com built with Hugo (v0.154.2) using the PaperMod theme 
 ## Common Commands
 
 ```bash
+# One-time prerequisite for local dev: fetch the pinned tech-radar vendor
+# scripts into static/js/vendor/. They are gitignored, so without this the
+# tech radar page renders empty. Re-run after cleaning static/js/vendor/.
+# CI runs this automatically before building.
+./scripts/fetch-radar-vendor.sh
+
 # Local development server with live reload
 hugo server
 
@@ -17,6 +23,10 @@ hugo --gc --minify
 
 # Create a new blog post
 hugo new content/posts/<slug>.md
+
+# Run the JS unit tests (tech radar CSV -> entry mapping and sanitizer).
+# Pass the file explicitly — `node --test test/` does not reliably discover it.
+node --test test/radar-mapping.test.js
 ```
 
 ## Architecture
@@ -36,7 +46,7 @@ A custom `llms.txt` output format template exists for LLM-friendly site structur
 
 ### Deployment
 
-GitHub Actions (`.github/workflows/hugo.yml`) builds and deploys to GitHub Pages on push to main. The workflow installs Go, Node.js, Dart Sass, and Hugo extended edition.
+GitHub Actions (`.github/workflows/hugo.yml`) builds and deploys to GitHub Pages on push to main. The workflow installs Go, Node.js, Dart Sass, and Hugo extended edition, runs `node --test test/radar-mapping.test.js`, and fetches the tech radar vendor scripts before the Hugo build.
 
 ## Content Conventions
 

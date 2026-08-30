@@ -38,6 +38,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Run JS unit tests
+        run: node --test test/radar-mapping.test.js
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
@@ -77,24 +79,8 @@ jobs:
           key: hugo-${{ github.run_id }}
           restore-keys:
             hugo-
-      - name: Build BYOR into static/radar
-        run: |
-          set -euo pipefail
-          # BYOR must stay completely unmodified — the pinned SHA below is the
-          # AGPL-3.0 "corresponding source". Do not patch/edit any cloned BYOR file.
-          BYOR_REF="d5645694fb5701c375d0699e138261328717d216" # v1.2.0
-          git clone https://github.com/thoughtworks/build-your-own-radar.git /tmp/byor
-          cd /tmp/byor
-          git checkout "$BYOR_REF"
-          npm ci
-          ASSET_PATH=/radar/ npm run build:prod
-          cd "${GITHUB_WORKSPACE}"
-          mkdir -p static/radar static/images
-          cp -a /tmp/byor/dist/. static/radar/
-          # Upstream bug: BYOR hardcodes several images (including blip status icons)
-          # to site-root-absolute /images/... paths, ignoring ASSET_PATH. This copy
-          # works around it without modifying BYOR.
-          cp -a /tmp/byor/dist/images/. static/images/
+      - name: Fetch pinned tech-radar vendor scripts
+        run: ./scripts/fetch-radar-vendor.sh
       - name: Build the site
         run: |
           hugo \
