@@ -31,6 +31,19 @@
   .radar-embed svg#radar text:not([fill]) {
     fill: var(--content);
   }
+  /* radar.js also draws a large, faint ring-name watermark ("ADOPT",
+     "TRIAL", "ASSESS", "CAUTION") inside the plot itself, at a y position
+     fixed to the ring radius (not exposed as a config option, so it can't
+     be repositioned). With our larger-than-default entry counts this
+     collided visually with the section headings beside it — and moving the
+     headings via legend_offset just shifted the collision elsewhere (into
+     the page's own title) rather than fixing it. The ring names are already
+     shown, un-ambiguously, as the small headings above each quadrant's own
+     list, so the watermark is pure redundant decoration: drop it instead of
+     chasing its position. It's the only text radar.js draws at 42px. */
+  .radar-embed svg#radar text[style*="42px"] {
+    display: none;
+  }
   .radar-detail {
     max-width: 720px;
     margin: 1.5rem auto 0;
