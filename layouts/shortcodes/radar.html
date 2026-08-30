@@ -1,21 +1,34 @@
 {{- $sheet := .Get "sheet" -}}
-{{- $height := .Get "height" | default "800" -}}
-{{- $q := querify "documentId" $sheet -}}
-{{- $src := printf "%s?%s" ("radar/" | relURL) $q -}}
-{{- /*
-  BYOR sizes its quadrant/mobile layout off the IFRAME's own rendered
-  width (mobileViewWidth: 768, tabletViewWidth: 1280 in BYOR's config),
-  not the browser window. PaperMod's content column is only ~720px
-  (--main-width), which would permanently pin the radar into BYOR's
-  mobile layout regardless of the visitor's actual screen size. The
-  breakout width/margin below lets the iframe exceed that column width
-  on desktop viewports (up to 1400px, centered) while still fitting
-  narrow viewports (falls back to ~96vw).
-*/ -}}
-<iframe
-  src="{{ $src | safeURL }}"
-  width="100%"
-  height="{{ $height }}"
-  style="border:0;width:min(1400px,96vw);margin-left:calc(50% - min(700px,48vw))"
-  loading="lazy"
-  title="Tech Radar"></iframe>
+{{- $width := .Get "width" | default "1450" -}}
+{{- $height := .Get "height" | default "1000" -}}
+<div class="radar-embed" data-sheet="{{ $sheet }}" data-width="{{ $width }}" data-height="{{ $height }}">
+  <svg id="radar"></svg>
+  <div class="radar-detail" hidden></div>
+</div>
+<style>
+  .radar-embed {
+    width: min(1400px, 96vw);
+    margin-left: calc(50% - min(700px, 48vw));
+  }
+  .radar-embed svg#radar {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .radar-detail {
+    max-width: 720px;
+    margin: 1.5rem auto 0;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--entry);
+    color: var(--content);
+  }
+  .radar-detail[hidden] {
+    display: none;
+  }
+</style>
+<script src="{{ "js/vendor/d3.min.js" | relURL }}"></script>
+<script src="{{ "js/vendor/radar.js" | relURL }}"></script>
+<script src="{{ "js/radar-mapping.js" | relURL }}"></script>
+<script src="{{ "js/radar-loader.js" | relURL }}"></script>
