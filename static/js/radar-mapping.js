@@ -67,6 +67,45 @@
     return RING_DISPLAY.map(function (name, i) { return { name: name, color: RING_COLORS[i] }; });
   }
 
+  // Ring/quadrant geometry as fractions of a plot's own max radius, not fixed
+  // pixels — this is what lets the custom renderer's plot size scale freely
+  // without any position ever needing to be hand-tuned again. RING_BOUNDS[0]
+  // starts slightly off zero so ring0 blips don't sit exactly on the center
+  // point.
+  var RING_BOUNDS = [
+    { inner: 0.05, outer: 0.25 },
+    { inner: 0.25, outer: 0.50 },
+    { inner: 0.50, outer: 0.75 },
+    { inner: 0.75, outer: 0.98 }
+  ];
+
+  // Quadrant index -> corner, matching the existing visual arrangement:
+  // 0=Techniques (bottom-right), 1=Platforms (bottom-left), 2=Tools
+  // (top-left), 3=Languages & Frameworks (top-right). Angles are degrees in
+  // standard SVG orientation (0 = +x/east, increasing toward +y, which reads
+  // as clockwise since SVG's y axis points down).
+  var QUADRANT_ANGLE_BOUNDS = [
+    { startDeg: 0, endDeg: 90 },
+    { startDeg: 90, endDeg: 180 },
+    { startDeg: 180, endDeg: 270 },
+    { startDeg: 270, endDeg: 360 }
+  ];
+
+  function ringRadiusBounds(ringIndex, maxRadius) {
+    var b = RING_BOUNDS[ringIndex];
+    return { inner: b.inner * maxRadius, outer: b.outer * maxRadius };
+  }
+
+  function quadrantAngleBounds(quadrantIndex) {
+    var b = QUADRANT_ANGLE_BOUNDS[quadrantIndex];
+    return { startDeg: b.startDeg, endDeg: b.endDeg };
+  }
+
+  function polarToXY(angleDeg, radius) {
+    var rad = (angleDeg * Math.PI) / 180;
+    return { x: radius * Math.cos(rad), y: radius * Math.sin(rad) };
+  }
+
   var RadarMapping = {
     mapRing: mapRing,
     mapQuadrant: mapQuadrant,
@@ -75,6 +114,9 @@
     csvRowToEntry: csvRowToEntry,
     buildQuadrantsConfig: buildQuadrantsConfig,
     buildRingsConfig: buildRingsConfig,
+    ringRadiusBounds: ringRadiusBounds,
+    quadrantAngleBounds: quadrantAngleBounds,
+    polarToXY: polarToXY,
     THEME_COLORS: THEME_COLORS
   };
 
