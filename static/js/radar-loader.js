@@ -78,6 +78,16 @@
       d3.select(svg).selectAll(".blip").on("click", function (event, d) {
         showDetail(d);
       });
+
+      // The numbered legend list (readable names, not the tiny plotted
+      // blips) is what most people try to click first. radar.js wraps each
+      // legend entry in <a href="#"> (no entries in our data set a `link`,
+      // so this never collides with a real blip link); without
+      // preventDefault() a click just jumps to the top of the page.
+      d3.select(svg).selectAll("a").on("click", function (event, d) {
+        event.preventDefault();
+        showDetail(d);
+      });
     }
 
     d3.csv(sheetUrl).then(function (data) {
