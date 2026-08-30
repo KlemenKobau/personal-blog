@@ -16,10 +16,27 @@
     function showDetail(entry) {
       var ringName = RadarMapping.buildRingsConfig()[entry.ring].name;
       var quadrantName = RadarMapping.buildQuadrantsConfig()[entry.quadrant].name;
-      detail.innerHTML =
-        "<h3>" + entry.label + "</h3>" +
-        "<p><strong>" + ringName + "</strong> &middot; " + quadrantName + "</p>" +
-        entry.description;
+      detail.innerHTML = "";
+
+      // label is a short plain name with no legitimate need for markup, so it
+      // goes in as text rather than through the HTML string path.
+      var heading = document.createElement("h3");
+      heading.textContent = entry.label;
+      detail.appendChild(heading);
+
+      var meta = document.createElement("p");
+      var ringEl = document.createElement("strong");
+      ringEl.textContent = ringName;
+      meta.appendChild(ringEl);
+      meta.appendChild(document.createTextNode(" · " + quadrantName));
+      detail.appendChild(meta);
+
+      // description is owner-authored rich text, already run through
+      // RadarMapping.sanitizeHtml() in csvRowToEntry().
+      var body = document.createElement("div");
+      body.innerHTML = entry.description;
+      detail.appendChild(body);
+
       detail.hidden = false;
     }
 
@@ -68,6 +85,10 @@
       render();
     }).catch(function (err) {
       console.error("Tech radar: failed to load sheet CSV", err);
+      // Without this the page is just an empty box with no hint that anything
+      // is wrong. Static string, so textContent is both safe and sufficient.
+      detail.textContent = "Couldn't load the tech radar data.";
+      detail.hidden = false;
     });
 
     var toggle = document.getElementById("theme-toggle");

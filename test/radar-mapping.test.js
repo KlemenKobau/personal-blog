@@ -122,3 +122,16 @@ test("sanitizeHtml neutralizes unquoted javascript: hrefs", () => {
   const input = '<a href=javascript:alert(1)>click</a>';
   assert.equal(RadarMapping.sanitizeHtml(input), '<a href="#">click</a>');
 });
+
+test("sanitizeHtml strips event handlers separated by / instead of whitespace", () => {
+  // HTML permits "/" between attributes, and unlike <script> this DOES run
+  // when assigned via innerHTML.
+  assert.equal(RadarMapping.sanitizeHtml('<img src=x/onerror=alert(1)>'), '<img src=x>');
+  assert.equal(RadarMapping.sanitizeHtml('<img/src="x"/onerror="alert(1)">'), '<img/src="x">');
+  assert.ok(!/onerror/i.test(RadarMapping.sanitizeHtml('<img/src=x/onerror=alert(1)>')));
+});
+
+test("sanitizeHtml neutralizes javascript: URLs after a / attribute separator", () => {
+  assert.equal(RadarMapping.sanitizeHtml('<img/src=javascript:alert(1)>'), '<img/src="#">');
+  assert.equal(RadarMapping.sanitizeHtml('<a/href="javascript:alert(1)">x</a>'), '<a/href="#">x</a>');
+});

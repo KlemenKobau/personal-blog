@@ -36,7 +36,9 @@
     var out = String(html === null || html === undefined ? "" : html);
     out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, "");
     out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, "");
-    out = out.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+    // HTML allows "/" as an attribute separator (<img/src=x/onerror=...>), so
+    // the separator class has to cover it or the handler slips through.
+    out = out.replace(/[\s/]+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
     out = out.replace(/(href|src)\s*=\s*"\s*javascript:[^"]*"/gi, '$1="#"');
     out = out.replace(/(href|src)\s*=\s*'\s*javascript:[^']*'/gi, "$1='#'");
     out = out.replace(/(href|src)\s*=\s*javascript:[^\s>]*/gi, '$1="#"');
