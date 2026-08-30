@@ -2,10 +2,20 @@
 {{- $height := .Get "height" | default "800" -}}
 {{- $q := querify "documentId" $sheet -}}
 {{- $src := printf "%s?%s" ("radar/" | relURL) $q -}}
+{{- /*
+  BYOR sizes its quadrant/mobile layout off the IFRAME's own rendered
+  width (mobileViewWidth: 768, tabletViewWidth: 1280 in BYOR's config),
+  not the browser window. PaperMod's content column is only ~720px
+  (--main-width), which would permanently pin the radar into BYOR's
+  mobile layout regardless of the visitor's actual screen size. The
+  breakout width/margin below lets the iframe exceed that column width
+  on desktop viewports (up to 1400px, centered) while still fitting
+  narrow viewports (falls back to ~96vw).
+*/ -}}
 <iframe
   src="{{ $src | safeURL }}"
   width="100%"
   height="{{ $height }}"
-  style="border:0"
+  style="border:0;width:min(1400px,96vw);margin-left:calc(50% - min(700px,48vw))"
   loading="lazy"
   title="Tech Radar"></iframe>

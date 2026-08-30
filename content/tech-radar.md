@@ -1,5 +1,6 @@
 ---
 title: "Tech Radar"
+date: 2026-08-30
 ---
 
 A living map of the technologies, tools, techniques, and platforms I'm tracking — grouped by how strongly I'd currently recommend adopting them.

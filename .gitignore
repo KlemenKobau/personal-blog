@@ -1,6 +1,11 @@
 # Hugo build output
 public/
 resources/_gen/
+
+# BYOR tech-radar build artifacts (injected by CI, see .github/workflows/hugo.yml).
+# static/images/ holds a copy of BYOR's own images (not site content) because
+# BYOR hardcodes site-root /images/... paths regardless of ASSET_PATH.
+# Do not put real site images at static/images/ — they would be silently ignored.
 static/radar/
 static/images/
 
