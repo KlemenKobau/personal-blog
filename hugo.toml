@@ -70,6 +70,12 @@ pygmentsUseClasses = true
   weight = 20
 
 [[menu.main]]
+  identifier = "radar"
+  name = "Tech Radar"
+  url = "/tech-radar/"
+  weight = 25
+
+[[menu.main]]
   identifier = "about"
   name = "About"
   url = "/about/"
