@@ -167,3 +167,48 @@ test("polarToXY converts angle/radius to cartesian coordinates", () => {
   assert.ok(Math.abs(south.x - 0) < 1e-9);
   assert.ok(Math.abs(south.y - 100) < 1e-9);
 });
+
+test("parseHash: empty or bare-hash input is overview mode", () => {
+  assert.deepEqual(RadarMapping.parseHash(""), { mode: "overview" });
+  assert.deepEqual(RadarMapping.parseHash("#"), { mode: "overview" });
+  assert.deepEqual(RadarMapping.parseHash(undefined), { mode: "overview" });
+});
+
+test("parseHash: valid quadrant slug is quadrant mode with no open id", () => {
+  assert.deepEqual(RadarMapping.parseHash("#quadrant=tools"), { mode: "quadrant", quadrant: 2, open: null });
+});
+
+test("parseHash: valid quadrant slug with an open id", () => {
+  assert.deepEqual(
+    RadarMapping.parseHash("#quadrant=languages-and-frameworks&open=7"),
+    { mode: "quadrant", quadrant: 3, open: 7 }
+  );
+});
+
+test("parseHash: unknown quadrant slug falls back to overview", () => {
+  assert.deepEqual(RadarMapping.parseHash("#quadrant=nonsense"), { mode: "overview" });
+});
+
+test("parseHash: non-numeric open id is ignored", () => {
+  assert.deepEqual(RadarMapping.parseHash("#quadrant=tools&open=abc"), { mode: "quadrant", quadrant: 2, open: null });
+});
+
+test("quadrantZoomOrigin places each quadrant's vertex at its canvas corner, inset by margin", () => {
+  assert.deepEqual(RadarMapping.quadrantZoomOrigin(0, 800, 20), { x: 20, y: 20 });
+  assert.deepEqual(RadarMapping.quadrantZoomOrigin(1, 800, 20), { x: 780, y: 20 });
+  assert.deepEqual(RadarMapping.quadrantZoomOrigin(2, 800, 20), { x: 780, y: 780 });
+  assert.deepEqual(RadarMapping.quadrantZoomOrigin(3, 800, 20), { x: 20, y: 780 });
+});
+
+test("quadrantZoomOrigin scales with a different canvas size", () => {
+  assert.deepEqual(RadarMapping.quadrantZoomOrigin(2, 400, 10), { x: 390, y: 390 });
+});
+
+test("QUADRANT_ORDER exposes the 4 quadrant slugs in index order", () => {
+  assert.deepEqual(RadarMapping.QUADRANT_ORDER, ["techniques", "platforms", "tools", "languages-and-frameworks"]);
+});
+
+test("THEME_COLORS includes a text color per theme", () => {
+  assert.equal(RadarMapping.THEME_COLORS.light.text, "#1a1a1a");
+  assert.equal(RadarMapping.THEME_COLORS.dark.text, "#eaeaea");
+});

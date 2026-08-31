@@ -9,8 +9,8 @@
   var QUADRANT_DISPLAY = ["Techniques", "Platforms", "Tools", "Languages & Frameworks"];
 
   var THEME_COLORS = {
-    light: { background: "#ffffff", grid: "#eeeeee", inactive: "#d6d6d6" },
-    dark: { background: "#1d1e20", grid: "#333333", inactive: "#414144" }
+    light: { background: "#ffffff", grid: "#eeeeee", inactive: "#d6d6d6", text: "#1a1a1a" },
+    dark: { background: "#1d1e20", grid: "#333333", inactive: "#414144", text: "#eaeaea" }
   };
 
   function mapRing(name) {
@@ -106,6 +106,42 @@
     return { x: radius * Math.cos(rad), y: radius * Math.sin(rad) };
   }
 
+  // Which canvas corner a quadrant's zoomed wedge radiates from, so the same
+  // 90-degree angle bounds used for the overview fill the whole canvas when
+  // blown up. cornerX/cornerY of 0 means that axis sits at `margin`; 1 means
+  // it sits at `size - margin`. Order matches QUADRANT_ANGLE_BOUNDS.
+  var QUADRANT_ZOOM_ORIGIN = [
+    { cornerX: 0, cornerY: 0 }, // 0: Techniques, angle 0-90
+    { cornerX: 1, cornerY: 0 }, // 1: Platforms, angle 90-180
+    { cornerX: 1, cornerY: 1 }, // 2: Tools, angle 180-270
+    { cornerX: 0, cornerY: 1 }  // 3: Languages & Frameworks, angle 270-360
+  ];
+
+  function quadrantZoomOrigin(quadrantIndex, size, margin) {
+    var c = QUADRANT_ZOOM_ORIGIN[quadrantIndex];
+    return {
+      x: c.cornerX === 0 ? margin : size - margin,
+      y: c.cornerY === 0 ? margin : size - margin
+    };
+  }
+
+  function parseHash(hash) {
+    var raw = typeof hash === "string" ? hash.replace(/^#/, "") : "";
+    var params = new URLSearchParams(raw);
+    var slug = params.get("quadrant");
+    var quadrantIndex = slug ? QUADRANT_ORDER.indexOf(slug) : -1;
+    if (quadrantIndex === -1) {
+      return { mode: "overview" };
+    }
+    var openRaw = params.get("open");
+    var openId = openRaw ? parseInt(openRaw, 10) : NaN;
+    return {
+      mode: "quadrant",
+      quadrant: quadrantIndex,
+      open: isNaN(openId) ? null : openId
+    };
+  }
+
   var RadarMapping = {
     mapRing: mapRing,
     mapQuadrant: mapQuadrant,
@@ -117,6 +153,9 @@
     ringRadiusBounds: ringRadiusBounds,
     quadrantAngleBounds: quadrantAngleBounds,
     polarToXY: polarToXY,
+    quadrantZoomOrigin: quadrantZoomOrigin,
+    parseHash: parseHash,
+    QUADRANT_ORDER: QUADRANT_ORDER,
     THEME_COLORS: THEME_COLORS
   };
 
