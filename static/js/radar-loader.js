@@ -322,6 +322,7 @@
     }
 
     function render(mode) {
+      hideTooltip();
       var modeEntries = mode.mode === "quadrant"
         ? entries.filter(function (e) { return e.quadrant === mode.quadrant; })
         : entries;
