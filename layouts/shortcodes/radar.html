@@ -6,10 +6,12 @@
     <h2 class="radar-quadrant-heading"></h2>
   </div>
   <svg id="radar"></svg>
+  <div class="radar-tooltip" hidden></div>
   <div class="radar-list"></div>
 </div>
 <style>
   .radar-embed {
+    position: relative;
     width: min(1400px, 96vw);
     margin-left: calc(50% - min(700px, 48vw));
   }
@@ -62,6 +64,22 @@
   }
   .radar-item[open] summary {
     margin-bottom: 0.5rem;
+  }
+  .radar-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--entry);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.15rem 0.5rem;
+    font-size: 0.8rem;
+    color: var(--content);
+    white-space: nowrap;
+    transform: translate(-50%, -130%);
+    z-index: 10;
+  }
+  .radar-tooltip[hidden] {
+    display: none;
   }
 </style>
 <script src="{{ "js/vendor/d3.min.js" | relURL }}"></script>

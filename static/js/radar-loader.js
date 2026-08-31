@@ -38,8 +38,10 @@
     var nav = container.querySelector(".radar-nav");
     var backLink = container.querySelector(".radar-back");
     var quadrantHeading = container.querySelector(".radar-quadrant-heading");
+    var tooltip = container.querySelector(".radar-tooltip");
     var entries = null;
     var detailsById = {};
+    var simulation = null;
 
     function currentMode() {
       return RadarMapping.parseHash(location.hash);
@@ -65,6 +67,22 @@
       if (scroll) {
         details.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+    }
+
+    function showTooltip(event, label) {
+      tooltip.textContent = label;
+      tooltip.hidden = false;
+      positionTooltip(event);
+    }
+
+    function positionTooltip(event) {
+      var rect = container.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left) + "px";
+      tooltip.style.top = (event.clientY - rect.top) + "px";
+    }
+
+    function hideTooltip() {
+      tooltip.hidden = true;
     }
 
     function geometryForMode(mode) {
@@ -201,11 +219,19 @@
           } else {
             openListItem(d.id, true);
           }
+        })
+        .on("mouseenter", function (event, d) {
+          showTooltip(event, d.label);
+        })
+        .on("mousemove", function (event) {
+          positionTooltip(event);
+        })
+        .on("mouseleave", function () {
+          hideTooltip();
         });
 
       blips.each(function (d) {
         var b = d3.select(this);
-        b.append("title").text(d.label);
         blipShape(b, d.moved).attr("fill", rings[d.ring].color);
         b.append("text")
           .text(d.id)
@@ -237,7 +263,10 @@
         });
       }
 
-      d3.forceSimulation(plotEntries)
+      if (simulation) {
+        simulation.stop();
+      }
+      simulation = d3.forceSimulation(plotEntries)
         .velocityDecay(0.3)
         .force("collide", d3.forceCollide(9))
         .on("tick", ticked);
@@ -337,6 +366,10 @@
     });
 
     window.addEventListener("hashchange", function () {
+      var raw = location.hash.replace(/^#/, "");
+      if (raw && raw.indexOf("quadrant=") !== 0) {
+        return; // not ours — e.g. PaperMod's #top back-to-top link
+      }
       if (entries) {
         render(currentMode());
       }
