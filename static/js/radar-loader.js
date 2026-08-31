@@ -1,41 +1,83 @@
 (function () {
   "use strict";
 
+  var ZOOM_MARGIN = 20;
+
   function currentTheme() {
     return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  }
+
+  // Path for a filled pie-slice from `origin` out to `radius`, spanning
+  // startDeg..endDeg — used as an invisible click target so the whole
+  // overview wedge (not just its blips) is clickable.
+  function sectorHitPath(origin, startDeg, endDeg, radius) {
+    var p1 = RadarMapping.polarToXY(startDeg, radius);
+    var p2 = RadarMapping.polarToXY(endDeg, radius);
+    return "M " + origin.x + "," + origin.y +
+      " L " + (origin.x + p1.x) + "," + (origin.y + p1.y) +
+      " A " + radius + "," + radius + " 0 0,1 " + (origin.x + p2.x) + "," + (origin.y + p2.y) +
+      " Z";
+  }
+
+  // Path for just the outer arc of a ring band, spanning startDeg..endDeg —
+  // used to draw a single quadrant's rings as quarter-arcs in the zoomed
+  // view (the overview draws full circles instead, since it shows all 4
+  // quadrants at once).
+  function ringArcPath(origin, startDeg, endDeg, radius) {
+    var p1 = RadarMapping.polarToXY(startDeg, radius);
+    var p2 = RadarMapping.polarToXY(endDeg, radius);
+    return "M " + (origin.x + p1.x) + "," + (origin.y + p1.y) +
+      " A " + radius + "," + radius + " 0 0,1 " + (origin.x + p2.x) + "," + (origin.y + p2.y);
   }
 
   function init(container) {
     var sheetUrl = container.dataset.sheet;
     var size = parseInt(container.dataset.size, 10) || 800;
     var svg = container.querySelector("svg#radar");
-    var legend = container.querySelector(".radar-legend");
-    var detail = container.querySelector(".radar-detail");
+    var list = container.querySelector(".radar-list");
+    var nav = container.querySelector(".radar-nav");
+    var backLink = container.querySelector(".radar-back");
+    var quadrantHeading = container.querySelector(".radar-quadrant-heading");
     var entries = null;
+    var detailsById = {};
 
-    function showDetail(entry) {
-      var ringName = RadarMapping.buildRingsConfig()[entry.ring].name;
-      var quadrantName = RadarMapping.buildQuadrantsConfig()[entry.quadrant].name;
-      detail.innerHTML = "";
+    function currentMode() {
+      return RadarMapping.parseHash(location.hash);
+    }
 
-      var heading = document.createElement("h3");
-      heading.textContent = entry.id + ". " + entry.label;
-      detail.appendChild(heading);
+    function navigate(quadrantIndex, openId) {
+      var slug = RadarMapping.QUADRANT_ORDER[quadrantIndex];
+      var hash = "quadrant=" + slug;
+      if (openId) {
+        hash += "&open=" + openId;
+      }
+      location.hash = hash;
+    }
 
-      var meta = document.createElement("p");
-      var ringEl = document.createElement("strong");
-      ringEl.textContent = ringName;
-      meta.appendChild(ringEl);
-      meta.appendChild(document.createTextNode(" · " + quadrantName));
-      detail.appendChild(meta);
+    function goToOverview() {
+      location.hash = "";
+    }
 
-      // description is owner-authored rich text, already run through
-      // RadarMapping.sanitizeHtml() in csvRowToEntry().
-      var body = document.createElement("div");
-      body.innerHTML = entry.description;
-      detail.appendChild(body);
+    function openListItem(id, scroll) {
+      var details = detailsById[id];
+      if (!details) return;
+      details.open = true;
+      if (scroll) {
+        details.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
 
-      detail.hidden = false;
+    function geometryForMode(mode) {
+      if (mode.mode === "quadrant") {
+        return {
+          origin: RadarMapping.quadrantZoomOrigin(mode.quadrant, size, ZOOM_MARGIN),
+          maxRadius: size - 2 * ZOOM_MARGIN
+        };
+      }
+      return {
+        origin: { x: size / 2, y: size / 2 },
+        maxRadius: size / 2 - 20
+      };
     }
 
     // Blip shape by movement code, drawn as an SVG path/shape string centered
@@ -55,11 +97,14 @@
       return sel.append("circle").attr("r", 6);
     }
 
-    function renderPlot(entries, theme) {
+    function renderPlot(plotEntries, theme, mode) {
       svg.innerHTML = "";
       var colors = RadarMapping.THEME_COLORS[theme];
       var rings = RadarMapping.buildRingsConfig();
-      var maxRadius = size / 2 - 20;
+      var quadrants = RadarMapping.buildQuadrantsConfig();
+      var geometry = geometryForMode(mode);
+      var origin = geometry.origin;
+      var maxRadius = geometry.maxRadius;
 
       var svgSel = d3.select(svg).attr("viewBox", "0 0 " + size + " " + size);
       svgSel.append("rect")
@@ -67,22 +112,74 @@
         .attr("height", size)
         .attr("fill", colors.background);
 
-      var g = svgSel.append("g").attr("transform", "translate(" + size / 2 + "," + size / 2 + ")");
+      var g = svgSel.append("g");
 
-      rings.forEach(function (ring, i) {
-        g.append("circle")
-          .attr("r", RadarMapping.ringRadiusBounds(i, maxRadius).outer)
-          .attr("fill", "none")
+      if (mode.mode === "overview") {
+        // One invisible clickable wedge per quadrant, drawn first so rings/
+        // blips render on top of it without blocking its own clicks.
+        quadrants.forEach(function (quadrant, qi) {
+          var bounds = RadarMapping.quadrantAngleBounds(qi);
+          g.append("path")
+            .attr("d", sectorHitPath(origin, bounds.startDeg, bounds.endDeg, maxRadius))
+            .attr("fill", "transparent")
+            .style("cursor", "pointer")
+            .on("click", function () {
+              navigate(qi, null);
+            });
+        });
+
+        rings.forEach(function (ring, i) {
+          g.append("circle")
+            .attr("cx", origin.x).attr("cy", origin.y)
+            .attr("r", RadarMapping.ringRadiusBounds(i, maxRadius).outer)
+            .attr("fill", "none")
+            .attr("stroke", colors.grid);
+        });
+        g.append("line")
+          .attr("x1", origin.x - maxRadius).attr("x2", origin.x + maxRadius)
+          .attr("y1", origin.y).attr("y2", origin.y)
           .attr("stroke", colors.grid);
-      });
-      g.append("line").attr("x1", -maxRadius).attr("x2", maxRadius).attr("y1", 0).attr("y2", 0).attr("stroke", colors.grid);
-      g.append("line").attr("x1", 0).attr("x2", 0).attr("y1", -maxRadius).attr("y2", maxRadius).attr("stroke", colors.grid);
+        g.append("line")
+          .attr("x1", origin.x).attr("x2", origin.x)
+          .attr("y1", origin.y - maxRadius).attr("y2", origin.y + maxRadius)
+          .attr("stroke", colors.grid);
+
+        quadrants.forEach(function (quadrant, qi) {
+          var bounds = RadarMapping.quadrantAngleBounds(qi);
+          var mid = (bounds.startDeg + bounds.endDeg) / 2;
+          var labelPos = RadarMapping.polarToXY(mid, maxRadius + 14);
+          g.append("text")
+            .attr("x", origin.x + labelPos.x)
+            .attr("y", origin.y + labelPos.y)
+            .attr("text-anchor", "middle")
+            .attr("fill", colors.text)
+            .style("font-size", "14px")
+            .style("font-weight", "600")
+            .style("pointer-events", "none")
+            .text(quadrant.name);
+        });
+      } else {
+        var bounds = RadarMapping.quadrantAngleBounds(mode.quadrant);
+        rings.forEach(function (ring, i) {
+          g.append("path")
+            .attr("d", ringArcPath(origin, bounds.startDeg, bounds.endDeg, RadarMapping.ringRadiusBounds(i, maxRadius).outer))
+            .attr("fill", "none")
+            .attr("stroke", colors.grid);
+        });
+        [bounds.startDeg, bounds.endDeg].forEach(function (deg) {
+          var p = RadarMapping.polarToXY(deg, maxRadius);
+          g.append("line")
+            .attr("x1", origin.x).attr("y1", origin.y)
+            .attr("x2", origin.x + p.x).attr("y2", origin.y + p.y)
+            .attr("stroke", colors.grid);
+        });
+      }
 
       // Seed each blip inside its own ring/quadrant wedge; the force
       // simulation below only nudges blips apart, it never needs to move
       // them between wedges, so a plain random seed (not Zalando's
       // reproducible PRNG) is fine here.
-      entries.forEach(function (entry) {
+      plotEntries.forEach(function (entry) {
         var angleBounds = RadarMapping.quadrantAngleBounds(entry.quadrant);
         var radiusBounds = RadarMapping.ringRadiusBounds(entry.ring, maxRadius);
         var angle = angleBounds.startDeg + Math.random() * (angleBounds.endDeg - angleBounds.startDeg);
@@ -93,17 +190,22 @@
       });
 
       var blips = g.selectAll(".blip")
-        .data(entries)
+        .data(plotEntries)
         .enter()
         .append("g")
         .attr("class", "blip")
         .style("cursor", "pointer")
         .on("click", function (event, d) {
-          showDetail(d);
+          if (mode.mode === "overview") {
+            navigate(d.quadrant, d.id);
+          } else {
+            openListItem(d.id, true);
+          }
         });
 
       blips.each(function (d) {
         var b = d3.select(this);
+        b.append("title").text(d.label);
         blipShape(b, d.moved).attr("fill", rings[d.ring].color);
         b.append("text")
           .text(d.id)
@@ -131,67 +233,81 @@
           var clamped = RadarMapping.polarToXY(clampedAngle, clampedR);
           d.x = clamped.x;
           d.y = clamped.y;
-          return "translate(" + d.x + "," + d.y + ")";
+          return "translate(" + (origin.x + d.x) + "," + (origin.y + d.y) + ")";
         });
       }
 
-      d3.forceSimulation(entries)
+      d3.forceSimulation(plotEntries)
         .velocityDecay(0.3)
         .force("collide", d3.forceCollide(9))
         .on("tick", ticked);
     }
 
-    function renderLegend(entries) {
-      legend.innerHTML = "";
-      var quadrants = RadarMapping.buildQuadrantsConfig();
+    function renderList(listEntries, mode) {
+      list.innerHTML = "";
+      detailsById = {};
+      if (mode.mode !== "quadrant") {
+        return;
+      }
       var rings = RadarMapping.buildRingsConfig();
-      var byQuadrant = [[], [], [], []];
-      entries.forEach(function (e) {
-        byQuadrant[e.quadrant].push(e);
+      var byRing = [[], [], [], []];
+      listEntries.forEach(function (e) {
+        byRing[e.ring].push(e);
       });
 
-      quadrants.forEach(function (quadrant, qi) {
-        var qDiv = document.createElement("div");
-        qDiv.className = "radar-legend-quadrant";
+      rings.forEach(function (ring, ri) {
+        var items = byRing[ri];
+        if (items.length === 0) return;
 
-        var qTitle = document.createElement("h3");
-        qTitle.textContent = quadrant.name;
-        qDiv.appendChild(qTitle);
+        var group = document.createElement("div");
+        group.className = "radar-ring-group";
 
-        var byRing = [[], [], [], []];
-        byQuadrant[qi].forEach(function (e) {
-          byRing[e.ring].push(e);
+        var heading = document.createElement("h3");
+        heading.textContent = ring.name;
+        heading.style.color = ring.color;
+        group.appendChild(heading);
+
+        items.slice().sort(function (a, b) {
+          return a.label.localeCompare(b.label);
+        }).forEach(function (entry) {
+          var details = document.createElement("details");
+          details.className = "radar-item";
+          details.name = "radar-accordion";
+
+          var summary = document.createElement("summary");
+          summary.textContent = entry.id + ". " + entry.label;
+          details.appendChild(summary);
+
+          // description is owner-authored rich text, already run through
+          // RadarMapping.sanitizeHtml() in csvRowToEntry().
+          var body = document.createElement("div");
+          body.innerHTML = entry.description;
+          details.appendChild(body);
+
+          detailsById[entry.id] = details;
+          group.appendChild(details);
         });
 
-        rings.forEach(function (ring, ri) {
-          var items = byRing[ri];
-          if (items.length === 0) return;
-
-          var rTitle = document.createElement("h4");
-          rTitle.textContent = ring.name;
-          rTitle.style.color = ring.color;
-          qDiv.appendChild(rTitle);
-
-          var list = document.createElement("ul");
-          items.slice().sort(function (a, b) {
-            return a.label.localeCompare(b.label);
-          }).forEach(function (entry) {
-            var li = document.createElement("li");
-            var a = document.createElement("a");
-            a.href = "#";
-            a.textContent = entry.id + ". " + entry.label;
-            a.addEventListener("click", function (event) {
-              event.preventDefault();
-              showDetail(entry);
-            });
-            li.appendChild(a);
-            list.appendChild(li);
-          });
-          qDiv.appendChild(list);
-        });
-
-        legend.appendChild(qDiv);
+        list.appendChild(group);
       });
+    }
+
+    function render(mode) {
+      var modeEntries = mode.mode === "quadrant"
+        ? entries.filter(function (e) { return e.quadrant === mode.quadrant; })
+        : entries;
+
+      nav.hidden = mode.mode !== "quadrant";
+      if (mode.mode === "quadrant") {
+        quadrantHeading.textContent = RadarMapping.buildQuadrantsConfig()[mode.quadrant].name;
+      }
+
+      renderPlot(modeEntries, currentTheme(), mode);
+      renderList(modeEntries, mode);
+
+      if (mode.mode === "quadrant" && mode.open) {
+        openListItem(mode.open, true);
+      }
     }
 
     function mapRows(rows) {
@@ -212,14 +328,23 @@
 
     d3.csv(sheetUrl).then(function (rows) {
       entries = mapRows(rows);
-      renderPlot(entries, currentTheme());
-      renderLegend(entries);
+      render(currentMode());
     }).catch(function (err) {
       console.error("Tech radar: failed to load sheet CSV", err);
       // Without this the page is just an empty box with no hint that anything
       // is wrong. Static string, so textContent is both safe and sufficient.
-      detail.textContent = "Couldn't load the tech radar data.";
-      detail.hidden = false;
+      list.textContent = "Couldn't load the tech radar data.";
+    });
+
+    window.addEventListener("hashchange", function () {
+      if (entries) {
+        render(currentMode());
+      }
+    });
+
+    backLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      goToOverview();
     });
 
     var toggle = document.getElementById("theme-toggle");
@@ -230,10 +355,14 @@
           // click and is what actually flips document.documentElement's
           // data-theme attribute. Defer to a macrotask so currentTheme()
           // reads the *new* value, not the one from before this click. Only
-          // the plot needs re-rendering for a theme change — the legend is
+          // the plot needs re-rendering for a theme change — the list is
           // plain HTML that already inherits the site's CSS variables.
           setTimeout(function () {
-            renderPlot(entries, currentTheme());
+            var mode = currentMode();
+            var modeEntries = mode.mode === "quadrant"
+              ? entries.filter(function (e) { return e.quadrant === mode.quadrant; })
+              : entries;
+            renderPlot(modeEntries, currentTheme(), mode);
           }, 0);
         }
       });

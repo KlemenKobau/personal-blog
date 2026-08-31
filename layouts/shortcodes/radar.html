@@ -1,9 +1,12 @@
 {{- $sheet := .Get "sheet" -}}
 {{- $size := .Get "size" | default "800" -}}
 <div class="radar-embed" data-sheet="{{ $sheet }}" data-size="{{ $size }}">
+  <div class="radar-nav" hidden>
+    <a href="#" class="radar-back">← Back to overview</a>
+    <h2 class="radar-quadrant-heading"></h2>
+  </div>
   <svg id="radar"></svg>
-  <div class="radar-legend"></div>
-  <div class="radar-detail" hidden></div>
+  <div class="radar-list"></div>
 </div>
 <style>
   .radar-embed {
@@ -16,37 +19,49 @@
     height: auto;
     margin: 0 auto;
   }
-  .radar-legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+  .radar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
-  .radar-legend-quadrant h3 {
-    margin-bottom: 0.5rem;
+  .radar-nav[hidden] {
+    display: none;
   }
-  .radar-legend-quadrant h4 {
-    margin: 0.75rem 0 0.25rem;
-    font-size: 0.9rem;
-  }
-  .radar-legend-quadrant ul {
-    margin: 0;
-    padding-left: 1.1rem;
-  }
-  .radar-legend-quadrant a {
+  .radar-back {
     color: var(--content);
+    font-weight: 600;
+    text-decoration: none;
   }
-  .radar-detail {
+  .radar-back:hover {
+    text-decoration: underline;
+  }
+  .radar-quadrant-heading {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .radar-list {
     max-width: 720px;
     margin: 1.5rem auto 0;
-    padding: 1rem;
+  }
+  .radar-ring-group h3 {
+    margin: 1.25rem 0 0.5rem;
+    font-size: 0.9rem;
+  }
+  .radar-item {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--entry);
     color: var(--content);
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
   }
-  .radar-detail[hidden] {
-    display: none;
+  .radar-item summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .radar-item[open] summary {
+    margin-bottom: 0.5rem;
   }
 </style>
 <script src="{{ "js/vendor/d3.min.js" | relURL }}"></script>
