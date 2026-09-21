@@ -254,3 +254,95 @@ kubectl rollout history daemonset/abc --revision=3
 Deployment strategies
 - [Rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment)
 - [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment)
+
+## Networking
+
+Get node information. Using `-o wide` will display additional info, here we are interested in the internal IP address.
+```sh
+kubectl get nodes -o wide
+
+# NAME           STATUS   ROLES           AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+# controlplane   Ready    control-plane   25m   v1.35.0   10.244.135.237   <none>        Ubuntu 22.04.5 LTS   6.8.0-138-generic   containerd://1.7.22
+# node01         Ready    <none>          24m   v1.35.0   10.244.253.173   <none>        Ubuntu 22.04.5 LTS   6.8.0-90-generic    containerd://1.7.22
+```
+
+### Display network interfaces on the machine
+
+You can check which one has the IP with the internal node IP to see which interface is used by Kubernetes.
+Similarly, you can see the mac address.
+```sh
+ip addr
+# 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+#    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+#    inet 127.0.0.1/8 scope host lo
+#       valid_lft forever preferred_lft forever
+#    inet6 ::1/128 scope host 
+#       valid_lft forever preferred_lft forever
+#...
+# 4: eth0@if30423: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default qlen 1000
+#    link/ether de:55:89:8c:5d:25 brd ff:ff:ff:ff:ff:ff link-netnsid 0     <----- MAC address
+#    inet 10.244.135.237/32 scope global eth0                              <----- SAME AS THE NODE 
+#       valid_lft forever preferred_lft forever
+#    inet6 fe80::dc55:89ff:fe8c:5d25/64 scope link 
+#       valid_lft forever preferred_lft forever
+...
+```
+
+### Show bridge interfaces
+
+```sh
+ip addr show type bridge
+```
+
+
+### Show routing info
+```sh
+route
+
+# Kernel IP routing table
+# Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+# default         169.254.1.1     0.0.0.0         UG    0      0        0 eth0 <--- DEFAULT GATEWAY
+# 169.254.1.1     0.0.0.0         255.255.255.255 UH    0      0        0 eth0
+# 172.17.0.0      0.0.0.0         255.255.255.0   U     0      0        0 cni0
+# 172.17.1.0      172.17.1.0      255.255.255.0   UG    0      0        0 flannel.1
+```
+
+### What is listening where
+```sh
+netstat -nplt
+
+# Active Internet connections (only servers)
+# Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+# tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      1028/ttyd           
+# tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1007/sshd: /usr/sbi 
+# tcp        0      0 10.244.135.237:2379     0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 10.244.135.237:2380     0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 127.0.0.1:45709         0.0.0.0:*               LISTEN      1001/containerd     
+# tcp        0      0 127.0.0.1:10257         0.0.0.0:*               LISTEN      3269/kube-controlle 
+# tcp        0      0 127.0.0.1:10259         0.0.0.0:*               LISTEN      3192/kube-scheduler 
+# tcp        0      0 127.0.0.1:10249         0.0.0.0:*               LISTEN      4311/kube-proxy     
+# tcp        0      0 127.0.0.1:10248         0.0.0.0:*               LISTEN      3777/kubelet        
+# tcp        0      0 127.0.0.1:2381          0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 127.0.0.1:2379          0.0.0.0:*               LISTEN      3300/etcd           
+# tcp6       0      0 :::8888                 :::*                    LISTEN      3964/kubectl        
+# tcp6       0      0 :::10250                :::*                    LISTEN      3777/kubelet        
+# tcp6       0      0 :::10256                :::*                    LISTEN      4311/kube-proxy     
+# tcp6       0      0 :::6443                 :::*                    LISTEN      3237/kube-apiserver 
+# tcp6       0      0 :::22                   :::*                    LISTEN      1007/sshd: /usr/sbi 
+```
+
+### Connections established to something
+
+```sh
+netstat -anp | grep etcd
+
+# tcp        0      0 10.244.135.237:2379     0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 10.244.135.237:2380     0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 127.0.0.1:2381          0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 127.0.0.1:2379          0.0.0.0:*               LISTEN      3300/etcd           
+# tcp        0      0 127.0.0.1:2379          127.0.0.1:36420         ESTABLISHED 3300/etcd           
+# tcp        0      0 127.0.0.1:2379          127.0.0.1:36216         ESTABLISHED 3300/etcd           
+# tcp        0      0 127.0.0.1:2379          127.0.0.1:35540         ESTABLISHED 3300/etcd           
+# tcp        0      0 127.0.0.1:2379          127.0.0.1:35928         ESTABLISHED 3300/etcd     
+# ...
+```
