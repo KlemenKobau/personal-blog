@@ -346,3 +346,10 @@ netstat -anp | grep etcd
 # tcp        0      0 127.0.0.1:2379          127.0.0.1:35928         ESTABLISHED 3300/etcd     
 # ...
 ```
+
+### Network plugin locations
+
+```sh
+ls /opt/cni/bin # supported network plugins
+ls /etc/cni/net.d # configurations, they get used alphabetically
+```
